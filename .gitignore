@@ -1,0 +1,11 @@
+# Secrets never belong in the repo — the OpenRouter key is supplied via the plugin's
+# userConfig (sensitive → system keychain), not a file. This is belt-and-suspenders.
+.env
+.env.*
+!.env.example
+*.local
+
+# OS / editor
+.DS_Store
+.idea/
+.vscode/

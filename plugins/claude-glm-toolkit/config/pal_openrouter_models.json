@@ -1,0 +1,26 @@
+{
+  "_README": {
+    "purpose": "Custom OpenRouter model registry for PAL MCP, referenced from .mcp.json via OPENROUTER_MODELS_CONFIG_PATH.",
+    "why": "PAL's bundled conf does not include z-ai/glm-5.2, so it falls back to a generic 32_768-token context window (providers/openrouter.py:_lookup_capabilities). That 32K cap, not GLM's real window, was limiting 'El Manager' heavy-reading delegation.",
+    "fix": "Declare z-ai/glm-5.2 with its real 1M context window so the registry hit bypasses the generic fallback. context_window verified at openrouter.ai/z-ai/glm-5.2 (1,048,576). max_output_tokens for the standard slug is 32,768 (the [1m] variant raises output to 131,072).",
+    "note": "OPENROUTER_MODELS_CONFIG_PATH REPLACES (not merges) the bundled conf; only GLM is needed because OPENROUTER_ALLOWED_MODELS restricts to it. Restart/reconnect the PAL MCP server for changes to load (registry is read at startup)."
+  },
+  "models": [
+    {
+      "model_name": "z-ai/glm-5.2",
+      "aliases": [
+        "glm",
+        "glm5.2",
+        "glm-5.2"
+      ],
+      "context_window": 1048576,
+      "max_output_tokens": 32768,
+      "supports_extended_thinking": false,
+      "supports_json_mode": false,
+      "supports_function_calling": false,
+      "supports_images": false,
+      "description": "Z.ai GLM-5.2 via OpenRouter — 1M-token context. Secondary model for the Claude+GLM collaboration environment.",
+      "intelligence_score": 14
+    }
+  ]
+}

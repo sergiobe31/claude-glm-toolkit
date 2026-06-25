@@ -1,0 +1,19 @@
+{
+  "name": "claude-glm-toolkit",
+  "description": "Cross-model collaboration: GLM-5.2 (1M ctx) via the PAL MCP + /interceptor (idea→prompt) + /debate (adversarial chamber), with claim-by-claim adjudication.",
+  "version": "1.0.0",
+  "author": {
+    "name": "Sergio"
+  },
+  "license": "MIT",
+  "keywords": ["mcp", "glm", "cross-model", "interceptor", "debate", "openrouter"],
+  "userConfig": {
+    "openrouter_api_key": {
+      "type": "string",
+      "title": "OpenRouter API key",
+      "description": "Your OpenRouter API key — powers the GLM-5.2 second model via the PAL MCP server. Get one at openrouter.ai. Stored in your system keychain, never in the repo.",
+      "sensitive": true,
+      "required": true
+    }
+  }
+}

@@ -1,0 +1,13 @@
+{
+  "name": "sergio-tools",
+  "owner": {
+    "name": "Sergio"
+  },
+  "plugins": [
+    {
+      "name": "claude-glm-toolkit",
+      "source": "./plugins/claude-glm-toolkit",
+      "description": "Claude + GLM-5.2 cross-model toolkit: PAL MCP (GLM, 1M ctx), /interceptor (idea→prompt), /debate (adversarial chamber)."
+    }
+  ]
+}
