@@ -92,6 +92,8 @@ mcp__plugin_claude-glm-toolkit_pal__listmodels      → z-ai/glm-5.2 (1M context
 ## Structure
 ```
 claude-glm-toolkit/
+├── CLAUDE.md                                  # what Claude auto-loads here (incl. glm_collab.html upkeep rule)
+├── glm_collab.html                            # visual map of the collaboration (offline; see CLAUDE.md)
 ├── .claude-plugin/marketplace.json            # the marketplace catalog ("sergio-tools")
 └── plugins/claude-glm-toolkit/                # the self-contained plugin
     ├── .claude-plugin/plugin.json             # manifest + userConfig (openrouter_api_key, sensitive)

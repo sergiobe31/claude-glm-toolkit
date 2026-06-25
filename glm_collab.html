@@ -1,0 +1,492 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mapa de flujos de trabajo entre Claude y GLM — claude-glm-toolkit</title>
+<style>
+  :root{
+    --claude:#D97757;
+    --claude-soft:#FBEDE6;
+    --claude-ink:#7A3A22;
+    --glm:#0E7C86;
+    --glm-soft:#E2F3F4;
+    --glm-ink:#0A4A52;
+    --ink:#1F2933;
+    --muted:#5B6776;
+    --line:#E4E8EC;
+    --bg:#F7F8FA;
+    --card:#FFFFFF;
+    --gold:#B8860B;
+    --gold-soft:#FFF6E0;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{
+    font-family:system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    color:var(--ink);
+    background:var(--bg);
+    line-height:1.6;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:1080px;margin:0 auto;padding:0 20px}
+  /* HERO */
+  header.hero{
+    background:linear-gradient(135deg,#1B2430 0%,#2A3A4A 55%,#2E4756 100%);
+    color:#F4F7FA;
+    padding:64px 0 56px;
+    border-bottom:1px solid rgba(255,255,255,.08);
+  }
+  header.hero .eyebrow{
+    display:inline-block;
+    font-size:.78rem;
+    letter-spacing:.18em;
+    text-transform:uppercase;
+    color:#9FB3C8;
+    margin-bottom:18px;
+    padding:6px 12px;
+    border:1px solid rgba(255,255,255,.18);
+    border-radius:999px;
+  }
+  header.hero h1{
+    margin:0 0 14px;
+    font-size:clamp(1.9rem,4.5vw,3.1rem);
+    line-height:1.15;
+    font-weight:700;
+    letter-spacing:-.01em;
+  }
+  header.hero h1 .c{color:var(--claude)}
+  header.hero h1 .g{color:#5FD0D6}
+  header.hero p.lead{
+    font-size:clamp(1rem,2.2vw,1.2rem);
+    color:#C7D4E0;
+    max-width:680px;
+    margin:0;
+  }
+  .hero-tags{
+    display:flex;flex-wrap:wrap;gap:10px;margin-top:28px;
+  }
+  .hero-tags span{
+    font-size:.82rem;
+    padding:7px 13px;
+    border-radius:999px;
+    background:rgba(255,255,255,.07);
+    border:1px solid rgba(255,255,255,.14);
+    color:#DCE6EF;
+  }
+  /* SECTION TITLES */
+  section{padding:56px 0}
+  .sec-head{margin-bottom:34px}
+  .sec-head h2{
+    font-size:clamp(1.4rem,3vw,1.9rem);
+    margin:0 0 8px;
+    font-weight:700;
+  }
+  .sec-head p{color:var(--muted);margin:0;max-width:640px}
+  /* ROLES */
+  .roles{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:20px;
+  }
+  .role{
+    border-radius:16px;
+    padding:26px 24px;
+    border:1px solid var(--line);
+    background:var(--card);
+    box-shadow:0 6px 22px rgba(20,30,50,.06);
+    position:relative;
+    overflow:hidden;
+  }
+  .role::before{
+    content:"";position:absolute;left:0;top:0;bottom:0;width:5px;
+  }
+  .role.claude::before{background:var(--claude)}
+  .role.glm::before{background:var(--glm)}
+  .role .who{
+    display:flex;align-items:center;gap:12px;margin-bottom:14px;
+  }
+  .role .dot{
+    width:14px;height:14px;border-radius:50%;flex:0 0 auto;
+  }
+  .role.claude .dot{background:var(--claude)}
+  .role.glm .dot{background:var(--glm)}
+  .role h3{margin:0;font-size:1.15rem}
+  .role .tag{
+    font-size:.78rem;font-weight:600;letter-spacing:.05em;text-transform:uppercase;
+    padding:3px 9px;border-radius:6px;
+  }
+  .role.claude .tag{background:var(--claude-soft);color:var(--claude-ink)}
+  .role.glm .tag{background:var(--glm-soft);color:var(--glm-ink)}
+  .role p{margin:8px 0 0;color:var(--muted);font-size:.96rem}
+  .role ul{margin:14px 0 0;padding-left:18px;color:var(--ink)}
+  .role li{margin-bottom:6px;font-size:.94rem}
+  /* FLOW CARDS */
+  .flows{
+    display:grid;
+    grid-template-columns:repeat(2,1fr);
+    gap:22px;
+  }
+  .card{
+    background:var(--card);
+    border:1px solid var(--line);
+    border-radius:18px;
+    padding:26px 24px 24px;
+    box-shadow:0 8px 28px rgba(20,30,50,.07);
+    display:flex;flex-direction:column;
+    transition:transform .18s ease, box-shadow .18s ease;
+  }
+  .card:hover{transform:translateY(-3px);box-shadow:0 14px 36px rgba(20,30,50,.12)}
+  .card .num{
+    font-size:.78rem;font-weight:700;letter-spacing:.12em;
+    color:var(--muted);text-transform:uppercase;
+  }
+  .card h3{
+    margin:6px 0 14px;
+    font-size:1.22rem;
+    line-height:1.3;
+  }
+  .badges{display:flex;flex-wrap:wrap;gap:7px;margin-bottom:16px}
+  .badge{
+    font-size:.74rem;font-weight:600;
+    padding:4px 10px;border-radius:6px;
+    background:#EEF2F5;color:#3A4A5A;
+    border:1px solid var(--line);
+    font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  }
+  .badge.c{background:var(--claude-soft);color:var(--claude-ink);border-color:transparent}
+  .badge.g{background:var(--glm-soft);color:var(--glm-ink);border-color:transparent}
+  .field{margin-bottom:14px}
+  .field .label{
+    font-size:.72rem;font-weight:700;letter-spacing:.08em;
+    text-transform:uppercase;color:var(--muted);margin-bottom:5px;
+  }
+  .field .ask{
+    font-style:italic;color:var(--ink);
+    border-left:3px solid var(--claude);
+    padding-left:12px;
+  }
+  .quote{
+    margin-top:auto;
+    background:#F4F7FA;
+    border:1px solid var(--line);
+    border-left:4px solid var(--glm);
+    border-radius:10px;
+    padding:14px 16px;
+    font-size:.92rem;
+    color:#33414F;
+  }
+  .quote .qlabel{
+    display:block;font-size:.7rem;font-weight:700;letter-spacing:.1em;
+    text-transform:uppercase;color:var(--glm-ink);margin-bottom:6px;
+  }
+  /* GOLDEN RULE */
+  .golden{
+    margin:8px 0 0;
+    background:linear-gradient(135deg,#3A2E0A 0%,#5A4310 100%);
+    color:#FFF7DD;
+    border-radius:20px;
+    padding:38px 30px;
+    box-shadow:0 12px 40px rgba(90,67,16,.25);
+    position:relative;
+    overflow:hidden;
+  }
+  .golden::after{
+    content:"";position:absolute;right:-40px;top:-40px;
+    width:180px;height:180px;border-radius:50%;
+    background:radial-gradient(circle,rgba(255,215,120,.18),transparent 70%);
+  }
+  .golden .glabel{
+    display:inline-block;font-size:.74rem;font-weight:700;letter-spacing:.18em;
+    text-transform:uppercase;color:#F2D98A;margin-bottom:14px;
+    padding:5px 12px;border:1px solid rgba(242,217,138,.4);border-radius:999px;
+  }
+  .golden h2{
+    margin:0 0 14px;font-size:clamp(1.3rem,3vw,1.7rem);color:#FFF7DD;
+  }
+  .golden p{margin:0 0 18px;color:#E8D9A8;max-width:720px;font-size:1.02rem}
+  .golden .pattern{
+    display:flex;flex-wrap:wrap;gap:10px;align-items:center;
+    font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+    font-size:.92rem;
+  }
+  .golden .step{
+    background:rgba(255,247,221,.1);
+    border:1px solid rgba(242,217,138,.3);
+    padding:8px 14px;border-radius:8px;color:#FFF7DD;
+  }
+  .golden .arrow{color:#F2D98A;font-weight:700}
+  /* CASOS REALES */
+  .cases{display:flex;flex-direction:column;gap:18px}
+  .case{
+    display:grid;grid-template-columns:auto 1fr;gap:20px;
+    background:var(--card);border:1px solid var(--line);border-radius:16px;
+    padding:24px;box-shadow:0 6px 22px rgba(20,30,50,.06);
+  }
+  .case .idx{
+    width:44px;height:44px;border-radius:12px;display:flex;align-items:center;
+    justify-content:center;font-weight:700;font-size:1.1rem;color:#fff;
+    background:var(--glm);flex:0 0 auto;
+  }
+  .case .body h3{margin:0 0 4px;font-size:1.1rem}
+  .case .body .meta{
+    font-size:.74rem;color:var(--muted);text-transform:uppercase;
+    letter-spacing:.07em;margin-bottom:10px;font-weight:600;
+  }
+  .case .body p{margin:0;color:#33414F;font-size:.95rem}
+  .case .body .outcome{margin-top:13px;display:flex;gap:8px;flex-wrap:wrap}
+  .case .body .chip{
+    font-size:.76rem;font-weight:600;padding:4px 11px;border-radius:999px;
+    background:var(--glm-soft);color:var(--glm-ink);
+  }
+  .case.live .idx{background:var(--claude)}
+  .case.live .chip{background:var(--claude-soft);color:var(--claude-ink)}
+  @media (max-width:760px){.case{grid-template-columns:1fr}}
+  /* FOOTER */
+  footer{
+    padding:30px 0 50px;text-align:center;color:var(--muted);font-size:.86rem;
+  }
+  footer .sep{margin:0 10px;color:var(--line)}
+  /* RESPONSIVE */
+  @media (max-width:760px){
+    .roles{grid-template-columns:1fr}
+    .flows{grid-template-columns:1fr}
+    header.hero{padding:48px 0 40px}
+    section{padding:44px 0}
+  }
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="wrap">
+    <span class="eyebrow">claude-glm-toolkit · plugin</span>
+    <h1>Mapa de flujos de trabajo entre <span class="c">Claude</span> y <span class="g">GLM</span></h1>
+    <p class="lead">Dos modelos, dos entrenamientos, una segunda opinión. Claude orquesta y ejecuta; GLM asesora y contrasta sin tocar el código por su cuenta.</p>
+    <div class="hero-tags">
+      <span>GLM-5.2 vía OpenRouter</span>
+      <span>1 millón de tokens de contexto</span>
+      <span>Puente técnico: PAL (servidor MCP)</span>
+      <span>Skills: /interceptor · /debate</span>
+    </div>
+  </div>
+</header>
+
+<!-- QUIÉN HACE QUÉ -->
+<section>
+  <div class="wrap">
+    <div class="sec-head">
+      <h2>Quién hace qué</h2>
+      <p>La división de roles es deliberada: solo así la segunda opinión aporta valor real y no se convierte en riesgo.</p>
+    </div>
+    <div class="roles">
+      <div class="role claude">
+        <div class="who">
+          <span class="dot"></span>
+          <h3>Claude</h3>
+          <span class="tag">Orquesta y ejecuta</span>
+        </div>
+        <p>Lleva el volante: coordina el trabajo, aplica los cambios y entrega el resultado.</p>
+        <ul>
+          <li>Decide qué se hace y en qué orden.</li>
+          <li>Ejecuta sobre el código real.</li>
+          <li>Pide la segunda opinión cuando la necesita.</li>
+          <li>Verifica lo que GLM dice contra fichero:línea.</li>
+        </ul>
+      </div>
+      <div class="role glm">
+        <div class="who">
+          <span class="dot"></span>
+          <h3>GLM</h3>
+          <span class="tag">Asesora y contrasta</span>
+        </div>
+        <p>Viene de un entrenamiento distinto: pilla cosas que Claude da por buenas. Pero nunca toca el código por su cuenta.</p>
+        <ul>
+          <li>Aporta una segunda opinión de contraste.</li>
+          <li>Red-teamea prompts y decisiones.</li>
+          <li>Sugiere, avisa, cuestiona. No ejecuta.</li>
+          <li>Siempre sujeto a verificación posterior.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FLUJOS -->
+<section style="padding-top:0">
+  <div class="wrap">
+    <div class="sec-head">
+      <h2>Los 4 flujos de trabajo</h2>
+      <p>Organizados por caso de uso, no por herramienta. Cada flujo combina lo que le pides con un ejemplo real verificado.</p>
+    </div>
+    <div class="flows">
+
+      <!-- FLUJO 1 -->
+      <div class="card">
+        <span class="num">Flujo 01</span>
+        <h3>Auditar y revisar código con segunda opinión</h3>
+        <div class="badges">
+          <span class="badge g">PAL · analyze</span>
+          <span class="badge g">PAL · codereview</span>
+          <span class="badge g">PAL · debug</span>
+          <span class="badge g">PAL · secaudit</span>
+          <span class="badge g">PAL · precommit</span>
+        </div>
+        <div class="field">
+          <div class="label">Qué le pides</div>
+          <div class="ask">“GLM, lee este módulo y dime qué falla, dónde hay fugas de datos (leaks), bugs o agujeros de seguridad.”</div>
+        </div>
+        <div class="quote">
+          <span class="qlabel">Ejemplo real</span>
+          GLM auditó <code>walk_forward.py</code>, redescubrió fugas de datos reales y validó un bug ya corregido, sin alucinar ni un fichero.
+        </div>
+      </div>
+
+      <!-- FLUJO 2 -->
+      <div class="card">
+        <span class="num">Flujo 02</span>
+        <h3>Convertir una idea cruda en un prompt sólido</h3>
+        <div class="badges">
+          <span class="badge c">skill · /interceptor</span>
+          <span class="badge g">GLM red-team (opcional)</span>
+        </div>
+        <div class="field">
+          <div class="label">Qué hace</div>
+          <div class="ask">Una idea a medio cocer entra → sale un prompt completo y pegable para un agente de coding. GLM puede red-teamearlo (buscar huecos) antes de entregártelo. No ejecuta la tarea, solo entrega el prompt.</div>
+        </div>
+        <div class="quote">
+          <span class="qlabel">Ejemplo real</span>
+          GLM red-teameó un prompt leyendo 2 ficheros, citó líneas exactas y aportó ~12 huecos reales, con 0 alucinaciones.
+        </div>
+      </div>
+
+      <!-- FLUJO 3 -->
+      <div class="card">
+        <span class="num">Flujo 03</span>
+        <h3>Estrés-testear una decisión</h3>
+        <div class="badges">
+          <span class="badge c">skill · /debate</span>
+        </div>
+        <div class="field">
+          <div class="label">Qué hace</div>
+          <div class="ask">Tu postura contra la de GLM, con verificación afirmación-por-afirmación (evidence gate) y un veredicto sintetizado más fuerte que cualquiera de las dos partes. Es ASESOR: informa, NUNCA ejecuta.</div>
+        </div>
+        <div class="field">
+          <div class="label">Cuándo usarlo</div>
+          <div class="ask">“¿hago X o Y?” · “ponme pegas a esto” · “hazme de abogado del diablo”</div>
+        </div>
+        <div class="quote">
+          <span class="qlabel">Por qué funciona</span>
+          El evidence gate obliga a verificar cada afirmación: el veredicto no es opinión, es conclusión contrastada.
+        </div>
+      </div>
+
+      <!-- FLUJO 4 -->
+      <div class="card">
+        <span class="num">Flujo 04</span>
+        <h3>Pensar a varias mentes: consenso y planificación</h3>
+        <div class="badges">
+          <span class="badge g">PAL · consensus</span>
+          <span class="badge g">PAL · planner</span>
+          <span class="badge g">PAL · thinkdeep</span>
+          <span class="badge g">PAL · challenge</span>
+        </div>
+        <div class="field">
+          <div class="label">Qué le pides</div>
+          <div class="ask">Que varios modelos voten sobre una decisión, o desarrollar un plan paso a paso, o cuestionar tu razonamiento desde otro entrenamiento.</div>
+        </div>
+        <div class="quote">
+          <span class="qlabel">Idea de fondo</span>
+          GLM no es “más de lo mismo”: al venir de un entrenamiento distinto, su voto diverge justo donde el de Claude tiende a coincidir consigo mismo.
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- CASOS REALES -->
+<section style="padding-top:0">
+  <div class="wrap">
+    <div class="sec-head">
+      <h2>Casos reales</h2>
+      <p>No es teoría: estos tres ocurrieron de verdad en esta colaboración. Los dos primeros pasaron por verificación; el tercero lo estás viendo ahora mismo.</p>
+    </div>
+    <div class="cases">
+
+      <div class="case">
+        <div class="idx">1</div>
+        <div class="body">
+          <h3>Auditoría de walk_forward.py</h3>
+          <div class="meta">Flujo 01 · PAL (“El Manager”)</div>
+          <p>GLM auditó el orquestador del walk-forward. Por su cuenta redescubrió dos fugas de datos reales y validó que un tercer bug ya estaba corregido — sin alucinar ni un fichero. Ese tercer bug acabó commiteado.</p>
+          <div class="outcome">
+            <span class="chip">2 leaks reales</span>
+            <span class="chip">1 bug validado</span>
+            <span class="chip">0 alucinaciones</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="case">
+        <div class="idx">2</div>
+        <div class="body">
+          <h3>Red-team de un prompt, cruzando modelos</h3>
+          <div class="meta">Flujo 02 · /interceptor</div>
+          <p>GLM-5.2 leyó los dos ficheros del prompt, citó líneas exactas y aportó ~12 huecos reales. El hallazgo estrella: descomponer Δ_total = Δ_pool + Δ_criterio, que dejó ver que el placebo era el estimador central. En la adjudicación, los 12 se mantuvieron como honestos.</p>
+          <div class="outcome">
+            <span class="chip">~12 huecos reales</span>
+            <span class="chip">citas línea-exactas</span>
+            <span class="chip">0 ficheros inventados</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="case live">
+        <div class="idx">3</div>
+        <div class="body">
+          <h3>Esta misma página</h3>
+          <div class="meta">Flujo de generación · PAL chat</div>
+          <p>El HTML que estás leyendo lo redactó GLM-5.2 a partir de un brief que Claude escribió y verificó. Claude revisó que no se colara ninguna capacidad inventada antes de guardarlo en tu Escritorio. Colaboración en vivo, no maqueta.</p>
+          <div class="outcome">
+            <span class="chip">GLM diseña</span>
+            <span class="chip">Claude verifica</span>
+            <span class="chip">cero capacidades fantasma</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- REGLA DE ORO -->
+<section>
+  <div class="wrap">
+    <div class="golden">
+      <span class="glabel">Regla de oro</span>
+      <h2>Lo que diga GLM no vale hasta verificarlo contra el código real o la traza.</h2>
+      <p>La verificación corta en los dos sentidos: pilla un bug real <strong>y</strong> también desmiente una falsa sospecha de alucinación. Sin verificación no hay confianza; con verificación, el contraste se convierte en ventaja.</p>
+      <div class="pattern">
+        <span class="step">delegar</span>
+        <span class="arrow">→</span>
+        <span class="step">adjudicar</span>
+        <span class="arrow">→</span>
+        <span class="step">gate GO / NO-GO</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    claude-glm-toolkit
+    <span class="sep">·</span>
+    Claude orquesta y ejecuta · GLM asesora y contrasta
+    <span class="sep">·</span>
+    Verifica siempre contra fichero:línea
+  </div>
+</footer>
+
+</body>
+</html>
