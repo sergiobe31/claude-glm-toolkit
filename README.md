@@ -56,13 +56,18 @@ result. Never a blind hand-off.
 
 ## Install / start
 
+> **Bring your own key.** This plugin ships *no* API key. Each user supplies their **own** OpenRouter
+> key at install time; it's stored in *their* system keychain, never in the repo. So sharing this repo
+> never exposes anyone's key. Who built what is spelled out in **[CREDITS.md](CREDITS.md)**.
+
 **From inside Claude Code** (type these in the prompt; they start with `/`):
 ```
-/plugin marketplace add /Users/sbe31/Desktop/claude-glm-toolkit
+/plugin marketplace add https://github.com/sergiobe31/claude-glm-toolkit
 /plugin install claude-glm-toolkit@sergio-tools
 ```
-→ You'll be prompted for your **OpenRouter API key** (stored in the macOS **keychain**, never in the
-repo). → **Restart** Claude Code (or `/reload-plugins`) so the GLM server starts.
+→ You'll be prompted for **your own OpenRouter API key** (get one at openrouter.ai; stored in your
+system **keychain**, never in the repo). → **Restart** Claude Code (or `/reload-plugins`) so the GLM
+server starts.
 
 **If the interactive prompts don't surface** (it happened to us — the `/plugin install` /
 `/plugin configure` dialogs didn't appear), use the CLI instead:
@@ -71,8 +76,11 @@ claude plugin install claude-glm-toolkit@sergio-tools --config openrouter_api_ke
 ```
 The key still lands in the keychain because the manifest marks it `sensitive`.
 
-**On another machine:** copy/clone this folder, then run the same commands. The only prerequisite is
-**`uvx`** (the PAL server runs via `uvx`). Nothing else to set up.
+**Prerequisites:** **`uvx`** (the PAL server runs via `uvx`) and an **OpenRouter account** with a
+little credit. Nothing else to set up.
+
+> Maintainer / local dev: `marketplace add` also accepts a local path, e.g.
+> `/plugin marketplace add /path/to/claude-glm-toolkit`.
 
 ## Verify it's live
 ```
@@ -92,6 +100,9 @@ mcp__plugin_claude-glm-toolkit_pal__listmodels      → z-ai/glm-5.2 (1M context
 ## Structure
 ```
 claude-glm-toolkit/
+├── README.md                                  # this file (humans)
+├── CREDITS.md                                 # who built what — borrowed vs original
+├── LICENSE                                    # MIT (covers the original parts; see CREDITS.md)
 ├── CLAUDE.md                                  # what Claude auto-loads here (incl. glm_collab.html upkeep rule)
 ├── glm_collab.html                            # visual map of the collaboration (offline; see CLAUDE.md)
 ├── .claude-plugin/marketplace.json            # the marketplace catalog ("sergio-tools")
@@ -114,11 +125,25 @@ claude-glm-toolkit/
 - **Portability:** PAL launches with **bare `uvx`** (resolves via `$PATH`), so it works across
   machines without hard-coded paths.
 
-## Provenance (head repos)
-- `BeehiveInnovations/pal-mcp-server` — the MCP server exposing GLM (run via `uvx`, not forked).
-- `affaan-m/ECC` (MIT) — the `/interceptor` skeleton + SKILL conventions.
-- `linshenkx/prompt-optimizer` (copyleft) — *patterns only* (the "modify-don't-execute" guard); no code copied.
-- `Alex-R-A/llm-argumentation-protocol` (no license) — design inspiration for `/debate`; no code copied.
+## Credits & license
+
+This toolkit is built on other people's work, and it matters to be clear about which parts.
+**Full, honest breakdown in [CREDITS.md](CREDITS.md).** The short version:
+
+**Already built by others (not original here):**
+- `BeehiveInnovations/pal-mcp-server` — the entire second-model **engine** (all the `pal` tools). Run
+  as-is via `uvx`, not forked. *This is the biggest piece, and it isn't mine.*
+- `affaan-m/ECC` (MIT) — the `/interceptor` **skeleton** + SKILL conventions.
+- `linshenkx/prompt-optimizer` (copyleft) — the "modify-don't-execute" guard, *as a pattern* (no code copied).
+- `Alex-R-A/llm-argumentation-protocol` (no license) — `/debate`'s loop **design**, *as inspiration* (no code copied).
+
+**Original to this project (Sergio, with Claude):**
+- The **packaging** as a native Claude Code plugin (marketplace + manifest + keychain-backed key + MCP wiring).
+- The GLM-5.2 **1M-context fix** (`config/pal_openrouter_models.json`) — diagnosed and declared so PAL stops falling back to 32K.
+- The **claim-by-claim adjudication discipline** (REAL / SMELL / FALSE-POSITIVE / HALLUCINATION) that makes the second model safe to rely on.
+- The two **skills as written** and all the **docs** (README, CLAUDE.md, the `glm_collab.html` brief).
+
+Licensed **MIT** — see [LICENSE](LICENSE).
 
 ## Notes / recovery
 - Editing a `SKILL.md` takes effect immediately; changes to `.mcp.json` / `plugin.json` need
