@@ -67,11 +67,11 @@ assertion get discounted. Pass relevant files via `absolute_file_paths` for grou
 `continuation_id` across rounds so the adversary keeps full context.
 
 ### Phase 3 — Adjudicate (never pass raw)
-Classify every adversary point against ground truth: **REAL** (verified — fold in) ·
-**SMELL** (plausible, needs a check — name the check) · **FALSE-POSITIVE** (wrong — say why) ·
-**HALLUCINATION** (invented file/fact — drop). Verify line numbers and claims yourself.
-Verification cuts both ways: it can rescue a real point you'd have dismissed and kill a plausible
-one. Report the tally honestly, including hallucinations.
+Apply the shared **Adjudication Protocol** (`references/adjudication-protocol.md`, at the plugin root)
+to every adversary point: tag each **REAL** / **SMELL** / **FALSE-POSITIVE** / **HALLUCINATION**
+against ground truth, verify line numbers and claims yourself, and report the tally honestly
+(hallucinations included). Verification cuts both ways — it rescues a real point you'd have dismissed
+and kills a plausible one.
 
 ### Phase 4 — Refine (optional, capped)
 If the adjudication changed your position, refine it and run ONE more adversary round.

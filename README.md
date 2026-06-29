@@ -133,6 +133,7 @@ claude-glm-toolkit/
 └── plugins/claude-glm-toolkit/                # the self-contained plugin
     ├── .claude-plugin/plugin.json             # manifest + userConfig (openrouter_api_key, sensitive)
     ├── .mcp.json                              # PAL server: bare uvx, ${user_config.openrouter_api_key}, DEFAULT_MODEL=auto
+    ├── references/adjudication-protocol.md     # the verify-don't-trust protocol both skills share
     ├── skills/{interceptor,debate}/SKILL.md
     └── config/pal_openrouter_models.json      # GLM-5.2 @ 1M context — OPT-IN (not wired by default; see Choosing the second model)
 ```
@@ -173,6 +174,12 @@ This toolkit is built on other people's work, and it matters to be clear about w
 - The two **skills as written** and all the **docs** (README, CLAUDE.md, the `glm_collab.html` brief).
 
 Licensed **MIT** — see [LICENSE](LICENSE).
+
+## Possible extensions (not built)
+- **Project-map bootstrapper** — a skill that scans the repo and writes `.claude/interceptor.md` (the
+  component map / invariants that `/interceptor` Phase 0 already reads). Deferred on purpose: it mainly
+  pays off on large or team repos; for small projects `/interceptor`'s inline Phase-0 scan is enough.
+  Modeled on ECC's `brand-voice` producer→schema→consumer pattern if anyone wants to build it.
 
 ## Notes / recovery
 - Editing a `SKILL.md` takes effect immediately; changes to `.mcp.json` / `plugin.json` need

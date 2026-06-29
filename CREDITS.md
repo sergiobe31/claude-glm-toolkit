@@ -39,7 +39,9 @@ its upstream git repo via `uvx`. None of that code is mine.
 
 The structure/scaffolding of the `interceptor` skill and the SKILL.md conventions are **adapted from
 ECC**. The pipeline, rubric and guards *as written* were reworked for this toolkit (by Sergio +
-Claude), but the bones come from ECC and the credit belongs there.
+Claude), but the bones come from ECC and the credit belongs there. The shared
+`references/adjudication-protocol.md` convention — a skill pointing to one canonical reference doc
+instead of restating it — also follows ECC's `references/`-schema pattern (e.g. its `brand-voice` skill).
 
 - Source: https://github.com/affaan-m/ECC
 - License: **MIT** — its copyright/permission notice should travel with any substantial reuse.
