@@ -19,11 +19,3 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
-
----
-
-This license covers the ORIGINAL parts of this project only (the plugin
-packaging, the GLM 1M-context config, the cross-model adjudication discipline,
-the two skills as written, and the documentation). It does NOT relicense the
-third-party work this toolkit builds on. See CREDITS.md for the full breakdown
-and for each upstream project's own license and terms.

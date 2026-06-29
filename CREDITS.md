@@ -132,5 +132,9 @@ of the above.
 | `prompt-optimizer` | "modify-don't-execute" pattern | copyleft | none — pattern only, no code copied |
 | `llm-argumentation-protocol` | `/debate` loop design | **none stated** (all rights reserved) | don't copy its code; ideas/design only were reused |
 
+The MIT `LICENSE` covers **only this project's own original parts** (the plugin packaging, the
+1M-context config, the cross-model adjudication discipline, the two skills as written, and the docs).
+It does **not** relicense the third-party work above — each upstream keeps its own terms.
+
 If you build on this toolkit, keep this file and the `LICENSE` intact, and respect each upstream
 project's own terms.
