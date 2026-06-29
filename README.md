@@ -1,7 +1,7 @@
 # claude-glm-toolkit
 
-A **Claude Code plugin** that gives Claude a *second model* — **GLM-5.2** (1M-token context, via
-OpenRouter) — plus two skills, so Claude can collaborate with a model from a **different training
+A **Claude Code plugin** that gives Claude a *second model* — **any OpenRouter model** (GLM-5.2 by
+default) — plus two skills, so Claude can collaborate with a model from a **different training
 distribution**. The second model catches what self-review misses; the discipline below keeps it
 honest.
 
@@ -14,7 +14,7 @@ honest.
 
 ## What it gives you (the tools — no more, no less)
 
-**1. A second model: GLM-5.2 via the bundled "PAL" MCP server.** Exposed as tools named
+**1. A second model via the bundled "PAL" MCP server** (any OpenRouter model; GLM-5.2 by default). Exposed as tools named
 `mcp__plugin_claude-glm-toolkit_pal__*`. The full menu:
 
 | Group | Tools |
@@ -37,8 +37,9 @@ honest.
 ## How the cross-model interaction actually works (the mechanism)
 
 1. The plugin bundles an **MCP server** ("PAL", `BeehiveInnovations/pal-mcp-server`, run via `uvx`)
-   that connects to **GLM-5.2 through OpenRouter** and exposes it as the tools above. When the plugin
-   is enabled, Claude Code starts this server and the tools become callable by the main Claude.
+   that connects to **OpenRouter** (GLM-5.2 by default; **any** OpenRouter model works — see *Choosing
+   the second model*) and exposes it as the tools above. When the plugin is enabled, Claude Code starts
+   this server and the tools become callable by the main Claude.
 2. **Division of labor:** the **main Claude orchestrates and gathers ground truth** — it has file,
    web, and repo access. **GLM reasons/critiques over what Claude passes it** (in the prompt, or as
    attached file paths). GLM has **no web/file browsing of its own**.
@@ -85,15 +86,38 @@ little credit. Nothing else to set up.
 ## Verify it's live
 ```
 claude mcp list | grep pal                          → plugin:claude-glm-toolkit:pal ... ✔ Connected
-mcp__plugin_claude-glm-toolkit_pal__listmodels      → z-ai/glm-5.2 (1M context)
+mcp__plugin_claude-glm-toolkit_pal__listmodels      → the OpenRouter catalog (gpt-5, gemini-2.5-pro, claude-*, grok-4, …)
 /claude-glm-toolkit:debate <a decision>             → the skill responds
 ```
 
 ## Use it day-to-day
 - Stress-test a decision → `/claude-glm-toolkit:debate <the decision>`
 - Polish a rough idea into a prompt → `/claude-glm-toolkit:interceptor <the idea>`
-- Or just ask Claude: *"get GLM's second opinion on X"* / *"have GLM red-team Y"* — Claude calls the
-  PAL tools and adjudicates the answer.
+- Or just ask Claude: *"get GLM's second opinion on X"* / *"have **gpt-5** red-team Y"* — Claude calls
+  the PAL tools, with the model you name, and adjudicates the answer.
+
+---
+
+## Choosing the second model
+
+This toolkit is **not locked to GLM** — PAL runs with `DEFAULT_MODEL=auto`, which means *you name the
+model per call* and **any OpenRouter model works**:
+
+- **Name it in the request:** *"get **openai/gpt-5**'s opinion on X"*, *"have
+  **google/gemini-2.5-pro** red-team Y"*. The skills default to `z-ai/glm-5.2` if you don't name one.
+- **Why it just works:** PAL's bundled registry already knows the common models (`openai/gpt-5`,
+  `google/gemini-2.5-pro`, `anthropic/claude-*`, `x-ai/grok-4`, `deepseek/*`, …) with their real
+  context windows. A model PAL doesn't know **still works** — it just uses a generic ~32K window
+  (verified: `providers/openrouter.py:_lookup_capabilities`).
+- **No cost guard:** there's no `OPENROUTER_ALLOWED_MODELS` allowlist, so PAL will use whatever model
+  you (or a skill) name — including expensive ones. To hard-limit to one model for cost safety, add
+  `"OPENROUTER_ALLOWED_MODELS": "your/model"` back to `.mcp.json`.
+- **GLM at 1M:** PAL doesn't ship GLM's true 1M window, so by default GLM runs at the generic ~32K.
+  For GLM's full 1M context, opt in via `config/pal_openrouter_models.json` (see that file's notes; it
+  *replaces* the bundled registry, so use it only when GLM is your sole model). Most second-opinion
+  uses don't need 1M.
+- **`/debate` caveat:** its value comes from a *different-vendor* model. Point it at an `anthropic/*`
+  model and it becomes Claude-vs-Claude — the different-distribution benefit is largely lost.
 
 ---
 
@@ -108,9 +132,9 @@ claude-glm-toolkit/
 ├── .claude-plugin/marketplace.json            # the marketplace catalog ("sergio-tools")
 └── plugins/claude-glm-toolkit/                # the self-contained plugin
     ├── .claude-plugin/plugin.json             # manifest + userConfig (openrouter_api_key, sensitive)
-    ├── .mcp.json                              # PAL server: bare uvx, ${user_config.*}, ${CLAUDE_PLUGIN_ROOT}
+    ├── .mcp.json                              # PAL server: bare uvx, ${user_config.openrouter_api_key}, DEFAULT_MODEL=auto
     ├── skills/{interceptor,debate}/SKILL.md
-    └── config/pal_openrouter_models.json      # GLM-5.2 @ 1M context (declared so PAL doesn't fall back to 32K)
+    └── config/pal_openrouter_models.json      # GLM-5.2 @ 1M context — OPT-IN (not wired by default; see Choosing the second model)
 ```
 
 ## How it's built (record of decisions)
@@ -120,8 +144,13 @@ claude-glm-toolkit/
   **auto-registers** on install, and the secret is handled natively.
 - **Secret:** the OpenRouter key is a `userConfig` field with `"sensitive": true` → stored in the
   keychain, referenced in `.mcp.json` as `${user_config.openrouter_api_key}`. Never committed.
-- **Config:** the 1M-context model registry is shipped in `config/` and referenced via
-  `${CLAUDE_PLUGIN_ROOT}` (absolute path resolves per-machine at install time).
+- **Model choice:** PAL runs with `DEFAULT_MODEL=auto` and **no** `OPENROUTER_ALLOWED_MODELS`, so the
+  caller names the model per call and **any** OpenRouter model works. This was decided via a GLM
+  consult adjudicated against PAL's own source (the engine, not memory) — see *Choosing the second
+  model*.
+- **Config:** the 1M-context GLM registry is shipped in `config/` as an **opt-in** — the default
+  `.mcp.json` no longer wires it, so any OpenRouter model keeps its correct window. Enable it via
+  `${CLAUDE_PLUGIN_ROOT}` only when GLM is your sole model (it *replaces* PAL's bundled registry).
 - **Portability:** PAL launches with **bare `uvx`** (resolves via `$PATH`), so it works across
   machines without hard-coded paths.
 
@@ -139,7 +168,7 @@ This toolkit is built on other people's work, and it matters to be clear about w
 
 **Original to this project (Sergio, with Claude):**
 - The **packaging** as a native Claude Code plugin (marketplace + manifest + keychain-backed key + MCP wiring).
-- The GLM-5.2 **1M-context fix** (`config/pal_openrouter_models.json`) — diagnosed and declared so PAL stops falling back to 32K.
+- The GLM-5.2 **1M-context fix** (`config/pal_openrouter_models.json`) — diagnosed and declared so PAL stops falling back to 32K; now shipped **opt-in** (any model is the default).
 - The **claim-by-claim adjudication discipline** (REAL / SMELL / FALSE-POSITIVE / HALLUCINATION) that makes the second model safe to rely on.
 - The two **skills as written** and all the **docs** (README, CLAUDE.md, the `glm_collab.html` brief).
 
@@ -148,8 +177,9 @@ Licensed **MIT** — see [LICENSE](LICENSE).
 ## Notes / recovery
 - Editing a `SKILL.md` takes effect immediately; changes to `.mcp.json` / `plugin.json` need
   `/reload-plugins` or a restart.
-- Cost: GLM via OpenRouter ≈ $0.95/M input, $3/M output — reach for it for heavy reading, a second
-  training distribution, or red-teaming, not for trivial things you can do inline.
-- This plugin **replaced an earlier scattered setup** (loose skills in `~/.claude/skills/` + a
-  user-scope PAL server). Those originals were moved to `~/.claude/_pre_plugin_backup_20260625/`
-  (recoverable) when the plugin took over.
+- Cost: GLM via OpenRouter ≈ $0.95/M input, $3/M output as of 2026 (other models vary — check
+  openrouter.ai for current pricing; with no allowlist there's no cost ceiling). Reach for the second
+  model for heavy reading, a second training distribution, or red-teaming, not for trivial things you
+  can do inline.
+- This plugin **replaced an earlier scattered setup** (loose skills + a user-scope PAL server), now
+  consolidated into one versioned, installable unit.

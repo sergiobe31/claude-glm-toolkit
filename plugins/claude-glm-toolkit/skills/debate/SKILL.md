@@ -58,7 +58,8 @@ reasoning and your assumptions. This is what the adversary will attack — make 
 hedged.
 
 ### Phase 2 — Adversary round (the second model)
-Hand your position + the context to `mcp__pal__chat` (model `z-ai/glm-5.2`, `thinking_mode: high`),
+Hand your position + the context to `mcp__pal__chat` (model: the OpenRouter model the user named for
+this session — default `z-ai/glm-5.2`; `thinking_mode: high`),
 framed to **attack**: find missing constraints, errors, omissions, failure modes; steelman the
 opposite; flag what it lacks context on. Enforce the **evidence gate**: tell it to cite a concrete
 mechanism / file:line / source / reproducible reason for each claim — claims that are just
@@ -89,6 +90,10 @@ Deliver a verdict that is stronger than either opening position: what survived, 
 - Round cap 2–3 (bias amplification).
 - Adjudication discipline (the second model's output is never accepted unverified).
 - Flag model convergence as a possible artifact, not proof.
+- **Cross-vendor check:** the value rests on a *different-vendor* second model (GLM by default). If the
+  configured/chosen model is the **same vendor** as you (e.g. an `anthropic/*` model via OpenRouter),
+  say so up front — the different-distribution benefit is largely lost and it degrades toward a
+  self-adversarial pass. Prefer a non-Anthropic model for a real debate.
 - If PAL is unavailable, run a **self-adversarial** pass (you argue the opposite side as hard as
   you can) and say explicitly that no second model was used.
 

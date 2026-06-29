@@ -1,6 +1,6 @@
 {
   "name": "claude-glm-toolkit",
-  "description": "Cross-model collaboration: GLM-5.2 (1M ctx) via the PAL MCP + /interceptor (idea→prompt) + /debate (adversarial chamber), with claim-by-claim adjudication.",
+  "description": "Cross-model collaboration: a second model via the PAL MCP (any OpenRouter model; GLM-5.2 by default) + /interceptor (idea→prompt) + /debate (adversarial chamber), with claim-by-claim adjudication.",
   "version": "1.0.0",
   "author": {
     "name": "Sergio"

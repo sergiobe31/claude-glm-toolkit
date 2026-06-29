@@ -1,9 +1,9 @@
 {
   "_README": {
-    "purpose": "Custom OpenRouter model registry for PAL MCP, referenced from .mcp.json via OPENROUTER_MODELS_CONFIG_PATH.",
-    "why": "PAL's bundled conf does not include z-ai/glm-5.2, so it falls back to a generic 32_768-token context window (providers/openrouter.py:_lookup_capabilities). That 32K cap, not GLM's real window, was limiting 'El Manager' heavy-reading delegation.",
+    "purpose": "OPTIONAL opt-in OpenRouter model registry for PAL. NOT wired by default: the shipped .mcp.json no longer sets OPENROUTER_MODELS_CONFIG_PATH, so PAL uses its bundled registry (which already knows GPT/Gemini/Claude/Grok/DeepSeek/etc. with correct context windows) and any OpenRouter model is allowed. Enable this file ONLY if GLM-5.2 is effectively your sole second model and you want its full 1M window.",
+    "why": "PAL's bundled conf does not include z-ai/glm-5.2, so it falls back to a generic 32_768-token context window (providers/openrouter.py:_lookup_capabilities). That 32K cap, not GLM's real window, was limiting heavy-reading delegation to the second model.",
     "fix": "Declare z-ai/glm-5.2 with its real 1M context window so the registry hit bypasses the generic fallback. context_window verified at openrouter.ai/z-ai/glm-5.2 (1,048,576). max_output_tokens for the standard slug is 32,768 (the [1m] variant raises output to 131,072).",
-    "note": "OPENROUTER_MODELS_CONFIG_PATH REPLACES (not merges) the bundled conf; only GLM is needed because OPENROUTER_ALLOWED_MODELS restricts to it. Restart/reconnect the PAL MCP server for changes to load (registry is read at startup)."
+    "note": "CAVEAT — OPENROUTER_MODELS_CONFIG_PATH REPLACES (not merges) PAL's bundled registry (verified: providers/registries/base.py loads exactly one path). So enabling this GLM-only file makes every OTHER model fall back to the generic 32K window — acceptable only when GLM is your sole model. To enable: add \"OPENROUTER_MODELS_CONFIG_PATH\": \"${CLAUDE_PLUGIN_ROOT}/config/pal_openrouter_models.json\" to the PAL env in .mcp.json and restart. Models NOT in PAL's bundled registry still work without this file — they just use a generic 32K window (providers/openrouter.py:_lookup_capabilities)."
   },
   "models": [
     {

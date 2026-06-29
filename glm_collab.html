@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Mapa de flujos de trabajo entre Claude y GLM — claude-glm-toolkit</title>
+<title>Give Claude a second model — claude-glm-toolkit</title>
 <style>
   :root{
     --claude:#D97757;
@@ -30,6 +30,7 @@
     -webkit-font-smoothing:antialiased;
   }
   .wrap{max-width:1080px;margin:0 auto;padding:0 20px}
+  code{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:.92em}
   /* HERO */
   header.hero{
     background:linear-gradient(135deg,#1B2430 0%,#2A3A4A 55%,#2E4756 100%);
@@ -60,7 +61,7 @@
   header.hero p.lead{
     font-size:clamp(1rem,2.2vw,1.2rem);
     color:#C7D4E0;
-    max-width:680px;
+    max-width:700px;
     margin:0;
   }
   .hero-tags{
@@ -74,6 +75,10 @@
     border:1px solid rgba(255,255,255,.14);
     color:#DCE6EF;
   }
+  .hero-note{
+    margin-top:20px;font-size:.86rem;color:#9FB3C8;
+  }
+  .hero-note strong{color:#C7D4E0;font-weight:600}
   /* SECTION TITLES */
   section{padding:56px 0}
   .sec-head{margin-bottom:34px}
@@ -82,46 +87,20 @@
     margin:0 0 8px;
     font-weight:700;
   }
-  .sec-head p{color:var(--muted);margin:0;max-width:640px}
-  /* ROLES */
-  .roles{
-    display:grid;
-    grid-template-columns:1fr 1fr;
-    gap:20px;
+  .sec-head p{color:var(--muted);margin:0;max-width:680px}
+  /* THIN ROLE BAND */
+  .band{
+    background:var(--card);border:1px solid var(--line);border-radius:14px;
+    padding:18px 22px;color:var(--muted);font-size:.97rem;
+    box-shadow:0 4px 16px rgba(20,30,50,.05);margin-bottom:30px;
+    display:flex;gap:14px;align-items:flex-start;
   }
-  .role{
-    border-radius:16px;
-    padding:26px 24px;
-    border:1px solid var(--line);
-    background:var(--card);
-    box-shadow:0 6px 22px rgba(20,30,50,.06);
-    position:relative;
-    overflow:hidden;
-  }
-  .role::before{
-    content:"";position:absolute;left:0;top:0;bottom:0;width:5px;
-  }
-  .role.claude::before{background:var(--claude)}
-  .role.glm::before{background:var(--glm)}
-  .role .who{
-    display:flex;align-items:center;gap:12px;margin-bottom:14px;
-  }
-  .role .dot{
-    width:14px;height:14px;border-radius:50%;flex:0 0 auto;
-  }
-  .role.claude .dot{background:var(--claude)}
-  .role.glm .dot{background:var(--glm)}
-  .role h3{margin:0;font-size:1.15rem}
-  .role .tag{
-    font-size:.78rem;font-weight:600;letter-spacing:.05em;text-transform:uppercase;
-    padding:3px 9px;border-radius:6px;
-  }
-  .role.claude .tag{background:var(--claude-soft);color:var(--claude-ink)}
-  .role.glm .tag{background:var(--glm-soft);color:var(--glm-ink)}
-  .role p{margin:8px 0 0;color:var(--muted);font-size:.96rem}
-  .role ul{margin:14px 0 0;padding-left:18px;color:var(--ink)}
-  .role li{margin-bottom:6px;font-size:.94rem}
-  /* FLOW CARDS */
+  .band .dots{flex:0 0 auto;display:flex;gap:6px;margin-top:6px}
+  .band .dots i{width:11px;height:11px;border-radius:50%;display:inline-block}
+  .band .dots .a{background:var(--claude)}
+  .band .dots .b{background:var(--glm)}
+  .band strong{color:var(--ink)}
+  /* LEVER + FLOW CARDS */
   .flows{
     display:grid;
     grid-template-columns:repeat(2,1fr);
@@ -135,8 +114,12 @@
     box-shadow:0 8px 28px rgba(20,30,50,.07);
     display:flex;flex-direction:column;
     transition:transform .18s ease, box-shadow .18s ease;
+    position:relative;overflow:hidden;
   }
   .card:hover{transform:translateY(-3px);box-shadow:0 14px 36px rgba(20,30,50,.12)}
+  .card.lever::before{content:"";position:absolute;left:0;top:0;right:0;height:4px}
+  .card.lever.c::before{background:var(--claude)}
+  .card.lever.g::before{background:var(--glm)}
   .card .num{
     font-size:.78rem;font-weight:700;letter-spacing:.12em;
     color:var(--muted);text-transform:uppercase;
@@ -146,7 +129,8 @@
     font-size:1.22rem;
     line-height:1.3;
   }
-  .badges{display:flex;flex-wrap:wrap;gap:7px;margin-bottom:16px}
+  .card p{margin:0 0 16px;color:#33414F;font-size:.96rem}
+  .badges{display:flex;flex-wrap:wrap;gap:7px;margin-top:auto}
   .badge{
     font-size:.74rem;font-weight:600;
     padding:4px 10px;border-radius:6px;
@@ -156,33 +140,21 @@
   }
   .badge.c{background:var(--claude-soft);color:var(--claude-ink);border-color:transparent}
   .badge.g{background:var(--glm-soft);color:var(--glm-ink);border-color:transparent}
-  .field{margin-bottom:14px}
-  .field .label{
-    font-size:.72rem;font-weight:700;letter-spacing:.08em;
-    text-transform:uppercase;color:var(--muted);margin-bottom:5px;
+  /* BONUS CARD */
+  .bonus{
+    margin-top:22px;background:#F1F5F8;box-shadow:none;border-style:dashed;
+    flex-direction:row;gap:20px;align-items:flex-start;
   }
-  .field .ask{
-    font-style:italic;color:var(--ink);
-    border-left:3px solid var(--claude);
-    padding-left:12px;
+  .bonus:hover{transform:none;box-shadow:none}
+  .bonus .tagline{
+    flex:0 0 auto;font-size:.74rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;
+    color:var(--glm-ink);background:var(--glm-soft);padding:6px 12px;border-radius:8px;margin-top:2px;
   }
-  .quote{
-    margin-top:auto;
-    background:#F4F7FA;
-    border:1px solid var(--line);
-    border-left:4px solid var(--glm);
-    border-radius:10px;
-    padding:14px 16px;
-    font-size:.92rem;
-    color:#33414F;
-  }
-  .quote .qlabel{
-    display:block;font-size:.7rem;font-weight:700;letter-spacing:.1em;
-    text-transform:uppercase;color:var(--glm-ink);margin-bottom:6px;
-  }
+  .bonus h3{margin:0 0 6px;font-size:1.1rem}
+  .bonus p{margin:0}
+  @media(max-width:760px){.bonus{flex-direction:column}}
   /* GOLDEN RULE */
   .golden{
-    margin:8px 0 0;
     background:linear-gradient(135deg,#3A2E0A 0%,#5A4310 100%);
     color:#FFF7DD;
     border-radius:20px;
@@ -202,9 +174,15 @@
     padding:5px 12px;border:1px solid rgba(242,217,138,.4);border-radius:999px;
   }
   .golden h2{
-    margin:0 0 14px;font-size:clamp(1.3rem,3vw,1.7rem);color:#FFF7DD;
+    margin:0 0 14px;font-size:clamp(1.25rem,3vw,1.65rem);color:#FFF7DD;line-height:1.3;
   }
-  .golden p{margin:0 0 18px;color:#E8D9A8;max-width:720px;font-size:1.02rem}
+  .golden p{margin:0 0 18px;color:#E8D9A8;max-width:760px;font-size:1.0rem}
+  .golden .tags{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 20px}
+  .golden .gtag{
+    font-size:.73rem;font-weight:700;letter-spacing:.03em;padding:5px 11px;border-radius:999px;
+    background:rgba(255,247,221,.12);border:1px solid rgba(242,217,138,.35);color:#FFF7DD;
+    font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  }
   .golden .pattern{
     display:flex;flex-wrap:wrap;gap:10px;align-items:center;
     font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
@@ -216,7 +194,25 @@
     padding:8px 14px;border-radius:8px;color:#FFF7DD;
   }
   .golden .arrow{color:#F2D98A;font-weight:700}
-  /* CASOS REALES */
+  /* TOOLBOX */
+  .toolbox{
+    background:var(--card);border:1px solid var(--line);border-radius:16px;
+    padding:24px;box-shadow:0 6px 22px rgba(20,30,50,.06);
+  }
+  .tgroup{display:grid;grid-template-columns:130px 1fr;gap:16px;padding:14px 0}
+  .tgroup + .tgroup{border-top:1px solid var(--line)}
+  .tgroup .glabel2{
+    font-size:.74rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);
+    padding-top:5px;
+  }
+  .tgroup .row{display:flex;flex-wrap:wrap;gap:7px}
+  .toolbox .foot{
+    margin-top:6px;padding-top:16px;border-top:1px solid var(--line);
+    color:var(--muted);font-size:.9rem;
+  }
+  .toolbox .foot strong{color:var(--ink)}
+  @media(max-width:760px){.tgroup{grid-template-columns:1fr;gap:8px}}
+  /* CASES */
   .cases{display:flex;flex-direction:column;gap:18px}
   .case{
     display:grid;grid-template-columns:auto 1fr;gap:20px;
@@ -234,22 +230,37 @@
     letter-spacing:.07em;margin-bottom:10px;font-weight:600;
   }
   .case .body p{margin:0;color:#33414F;font-size:.95rem}
+  .case .body p code{background:#EEF2F5;padding:1px 5px;border-radius:4px}
   .case .body .outcome{margin-top:13px;display:flex;gap:8px;flex-wrap:wrap}
   .case .body .chip{
     font-size:.76rem;font-weight:600;padding:4px 11px;border-radius:999px;
     background:var(--glm-soft);color:var(--glm-ink);
   }
+  .case.live{border-color:rgba(217,119,87,.4)}
   .case.live .idx{background:var(--claude)}
   .case.live .chip{background:var(--claude-soft);color:var(--claude-ink)}
   @media (max-width:760px){.case{grid-template-columns:1fr}}
+  /* EXTEND */
+  .xgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+  .xcard{
+    background:var(--card);border:1px solid var(--line);border-radius:14px;
+    padding:22px 20px;box-shadow:0 4px 16px rgba(20,30,50,.05);
+  }
+  .xcard h4{margin:0 0 7px;font-size:1.02rem}
+  .xcard p{margin:0;color:var(--muted);font-size:.9rem}
+  .xnote{
+    margin-top:16px;font-size:.85rem;color:var(--muted);
+    background:var(--gold-soft);border:1px solid #F0E2B8;border-radius:10px;padding:12px 16px;
+  }
+  @media(max-width:760px){.xgrid{grid-template-columns:1fr}}
   /* FOOTER */
   footer{
-    padding:30px 0 50px;text-align:center;color:var(--muted);font-size:.86rem;
+    padding:34px 0 54px;text-align:center;color:var(--muted);font-size:.86rem;
   }
   footer .sep{margin:0 10px;color:var(--line)}
+  footer .built{display:block;margin-top:10px;font-size:.82rem;color:#8A95A3}
   /* RESPONSIVE */
   @media (max-width:760px){
-    .roles{grid-template-columns:1fr}
     .flows{grid-template-columns:1fr}
     header.hero{padding:48px 0 40px}
     section{padding:44px 0}
@@ -260,198 +271,176 @@
 
 <header class="hero">
   <div class="wrap">
-    <span class="eyebrow">claude-glm-toolkit · plugin</span>
-    <h1>Mapa de flujos de trabajo entre <span class="c">Claude</span> y <span class="g">GLM</span></h1>
-    <p class="lead">Dos modelos, dos entrenamientos, una segunda opinión. Claude orquesta y ejecuta; GLM asesora y contrasta sin tocar el código por su cuenta.</p>
+    <span class="eyebrow">claude-glm-toolkit · Claude Code plugin</span>
+    <h1>Give <span class="c">Claude</span> a <span class="g">second model</span></h1>
+    <p class="lead">A cheap, independent model from a different training distribution, wired into Claude Code as a second opinion. It improves your results two ways — better prompts and a real second audit — and nothing it says is trusted until Claude verifies it.</p>
     <div class="hero-tags">
-      <span>GLM-5.2 vía OpenRouter</span>
-      <span>1 millón de tokens de contexto</span>
-      <span>Puente técnico: PAL (servidor MCP)</span>
-      <span>Skills: /interceptor · /debate</span>
+      <span>Claude Code plugin</span>
+      <span>Any OpenRouter model · GLM-5.2 by default</span>
+      <span>Cheap second opinion</span>
+      <span>Verify, don't trust</span>
     </div>
+    <p class="hero-note"><strong>Bring your own OpenRouter key</strong> — it lives in your system keychain, never in the repo. The plugin ships no key, so it's safe to share.</p>
   </div>
 </header>
 
-<!-- QUIÉN HACE QUÉ -->
+<!-- WHAT IT DOES FOR YOU -->
 <section>
   <div class="wrap">
     <div class="sec-head">
-      <h2>Quién hace qué</h2>
-      <p>La división de roles es deliberada: solo así la segunda opinión aporta valor real y no se convierte en riesgo.</p>
+      <h2>What it does for you</h2>
+      <p>Two levers, plus a bonus pattern. These are problems every developer hits — a second model from a different training distribution is the lever that moves them.</p>
     </div>
-    <div class="roles">
-      <div class="role claude">
-        <div class="who">
-          <span class="dot"></span>
-          <h3>Claude</h3>
-          <span class="tag">Orquesta y ejecuta</span>
-        </div>
-        <p>Lleva el volante: coordina el trabajo, aplica los cambios y entrega el resultado.</p>
-        <ul>
-          <li>Decide qué se hace y en qué orden.</li>
-          <li>Ejecuta sobre el código real.</li>
-          <li>Pide la segunda opinión cuando la necesita.</li>
-          <li>Verifica lo que GLM dice contra fichero:línea.</li>
-        </ul>
-      </div>
-      <div class="role glm">
-        <div class="who">
-          <span class="dot"></span>
-          <h3>GLM</h3>
-          <span class="tag">Asesora y contrasta</span>
-        </div>
-        <p>Viene de un entrenamiento distinto: pilla cosas que Claude da por buenas. Pero nunca toca el código por su cuenta.</p>
-        <ul>
-          <li>Aporta una segunda opinión de contraste.</li>
-          <li>Red-teamea prompts y decisiones.</li>
-          <li>Sugiere, avisa, cuestiona. No ejecuta.</li>
-          <li>Siempre sujeto a verificación posterior.</li>
-        </ul>
-      </div>
-    </div>
-  </div>
-</section>
 
-<!-- FLUJOS -->
-<section style="padding-top:0">
-  <div class="wrap">
-    <div class="sec-head">
-      <h2>Los 4 flujos de trabajo</h2>
-      <p>Organizados por caso de uso, no por herramienta. Cada flujo combina lo que le pides con un ejemplo real verificado.</p>
+    <div class="band">
+      <span class="dots"><i class="a"></i><i class="b"></i></span>
+      <span><strong>Claude orchestrates and verifies</strong> — it has the files, the web and the repo, and it adjudicates every answer. <strong>The second model advises and never executes</strong> — it reasons over what Claude hands it, from a different training distribution.</span>
     </div>
+
     <div class="flows">
-
-      <!-- FLUJO 1 -->
-      <div class="card">
-        <span class="num">Flujo 01</span>
-        <h3>Auditar y revisar código con segunda opinión</h3>
-        <div class="badges">
-          <span class="badge g">PAL · analyze</span>
-          <span class="badge g">PAL · codereview</span>
-          <span class="badge g">PAL · debug</span>
-          <span class="badge g">PAL · secaudit</span>
-          <span class="badge g">PAL · precommit</span>
-        </div>
-        <div class="field">
-          <div class="label">Qué le pides</div>
-          <div class="ask">“GLM, lee este módulo y dime qué falla, dónde hay fugas de datos (leaks), bugs o agujeros de seguridad.”</div>
-        </div>
-        <div class="quote">
-          <span class="qlabel">Ejemplo real</span>
-          GLM auditó <code>walk_forward.py</code>, redescubrió fugas de datos reales y validó un bug ya corregido, sin alucinar ni un fichero.
-        </div>
-      </div>
-
-      <!-- FLUJO 2 -->
-      <div class="card">
-        <span class="num">Flujo 02</span>
-        <h3>Convertir una idea cruda en un prompt sólido</h3>
+      <div class="card lever c">
+        <span class="num">Lever 1</span>
+        <h3>① Better prompts</h3>
+        <p><code>/interceptor</code> captures your project context, finds the gaps in your idea, and — optionally — has the second model red-team the draft. You get a prompt that's complete, constrained and scoped, ready to paste into a coding agent. It returns the prompt; it never runs the task.</p>
         <div class="badges">
           <span class="badge c">skill · /interceptor</span>
-          <span class="badge g">GLM red-team (opcional)</span>
-        </div>
-        <div class="field">
-          <div class="label">Qué hace</div>
-          <div class="ask">Una idea a medio cocer entra → sale un prompt completo y pegable para un agente de coding. GLM puede red-teamearlo (buscar huecos) antes de entregártelo. No ejecuta la tarea, solo entrega el prompt.</div>
-        </div>
-        <div class="quote">
-          <span class="qlabel">Ejemplo real</span>
-          GLM red-teameó un prompt leyendo 2 ficheros, citó líneas exactas y aportó ~12 huecos reales, con 0 alucinaciones.
+          <span class="badge g">second-model red-team (optional)</span>
         </div>
       </div>
-
-      <!-- FLUJO 3 -->
-      <div class="card">
-        <span class="num">Flujo 03</span>
-        <h3>Estrés-testear una decisión</h3>
+      <div class="card lever g">
+        <span class="num">Lever 2</span>
+        <h3>② A second audit</h3>
+        <p>A genuine second opinion that catches what single-model self-review misses. <code>/debate</code> pits your position against the second model under an evidence gate, then synthesizes a verdict stronger than either side — or just ask Claude: <em>“get a second opinion on this code.”</em></p>
         <div class="badges">
           <span class="badge c">skill · /debate</span>
-        </div>
-        <div class="field">
-          <div class="label">Qué hace</div>
-          <div class="ask">Tu postura contra la de GLM, con verificación afirmación-por-afirmación (evidence gate) y un veredicto sintetizado más fuerte que cualquiera de las dos partes. Es ASESOR: informa, NUNCA ejecuta.</div>
-        </div>
-        <div class="field">
-          <div class="label">Cuándo usarlo</div>
-          <div class="ask">“¿hago X o Y?” · “ponme pegas a esto” · “hazme de abogado del diablo”</div>
-        </div>
-        <div class="quote">
-          <span class="qlabel">Por qué funciona</span>
-          El evidence gate obliga a verificar cada afirmación: el veredicto no es opinión, es conclusión contrastada.
+          <span class="badge g">PAL · codereview</span>
+          <span class="badge g">PAL · secaudit</span>
+          <span class="badge g">PAL · debug</span>
         </div>
       </div>
+    </div>
 
-      <!-- FLUJO 4 -->
-      <div class="card">
-        <span class="num">Flujo 04</span>
-        <h3>Pensar a varias mentes: consenso y planificación</h3>
-        <div class="badges">
-          <span class="badge g">PAL · consensus</span>
-          <span class="badge g">PAL · planner</span>
-          <span class="badge g">PAL · thinkdeep</span>
-          <span class="badge g">PAL · challenge</span>
-        </div>
-        <div class="field">
-          <div class="label">Qué le pides</div>
-          <div class="ask">Que varios modelos voten sobre una decisión, o desarrollar un plan paso a paso, o cuestionar tu razonamiento desde otro entrenamiento.</div>
-        </div>
-        <div class="quote">
-          <span class="qlabel">Idea de fondo</span>
-          GLM no es “más de lo mismo”: al venir de un entrenamiento distinto, su voto diverge justo donde el de Claude tiende a coincidir consigo mismo.
-        </div>
+    <div class="card bonus">
+      <span class="tagline">Bonus</span>
+      <div>
+        <h3>Cheap context-grunt: delegate the token-heavy reading</h3>
+        <p>Point the cheap model at the big files; Claude stays in charge and gives the directives. Heavy context under expensive supervision — and, as always, verified before any of it is trusted.</p>
       </div>
-
     </div>
   </div>
 </section>
 
-<!-- CASOS REALES -->
+<!-- THE DISCIPLINE -->
+<section style="padding-top:0">
+  <div class="wrap">
+    <div class="golden">
+      <span class="glabel">The discipline</span>
+      <h2>Nothing the second model says is trusted until it's verified against ground truth.</h2>
+      <p>Its output is a <strong>proposal, not truth</strong>. Claude checks it claim-by-claim against <code>file:line</code> / source / trace and tags each one. Verification cuts both ways: it catches a real bug <strong>and</strong> it clears a false alarm. That's what turns a second model from a liability into an asset.</p>
+      <div class="tags">
+        <span class="gtag">REAL</span>
+        <span class="gtag">SMELL</span>
+        <span class="gtag">FALSE-POSITIVE</span>
+        <span class="gtag">HALLUCINATION</span>
+      </div>
+      <div class="pattern">
+        <span class="step">delegate</span>
+        <span class="arrow">→</span>
+        <span class="step">adjudicate</span>
+        <span class="arrow">→</span>
+        <span class="step">GO / NO-GO</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- WHAT'S IN THE BOX -->
 <section style="padding-top:0">
   <div class="wrap">
     <div class="sec-head">
-      <h2>Casos reales</h2>
-      <p>No es teoría: estos tres ocurrieron de verdad en esta colaboración. Los dos primeros pasaron por verificación; el tercero lo estás viendo ahora mismo.</p>
+      <h2>What's in the box</h2>
+      <p>The second model reaches Claude through PAL — a bundled MCP server that connects to OpenRouter and exposes the model as tools. Two skills are pre-built choreographies of the verify-don't-trust loop; the rest you call directly.</p>
+    </div>
+    <div class="toolbox">
+      <div class="tgroup">
+        <span class="glabel2">Skills</span>
+        <div class="row">
+          <span class="badge c">/interceptor — idea → prompt</span>
+          <span class="badge c">/debate — stress-test a decision</span>
+        </div>
+      </div>
+      <div class="tgroup">
+        <span class="glabel2">Think / decide</span>
+        <div class="row">
+          <span class="badge g">chat</span><span class="badge g">consensus</span><span class="badge g">challenge</span>
+          <span class="badge g">thinkdeep</span><span class="badge g">planner</span>
+        </div>
+      </div>
+      <div class="tgroup">
+        <span class="glabel2">Code</span>
+        <div class="row">
+          <span class="badge g">codereview</span><span class="badge g">precommit</span><span class="badge g">secaudit</span>
+          <span class="badge g">testgen</span><span class="badge g">refactor</span><span class="badge g">debug</span>
+          <span class="badge g">tracer</span><span class="badge g">docgen</span><span class="badge g">analyze</span>
+        </div>
+      </div>
+      <div class="tgroup">
+        <span class="glabel2">Util</span>
+        <div class="row">
+          <span class="badge g">listmodels</span><span class="badge g">apilookup</span><span class="badge g">version</span>
+        </div>
+      </div>
+      <div class="foot"><strong>Any OpenRouter model</strong> works — GLM-5.2 is just the default. Name the model you want per call.</div>
+    </div>
+  </div>
+</section>
+
+<!-- REAL CASES -->
+<section style="padding-top:0">
+  <div class="wrap">
+    <div class="sec-head">
+      <h2>Real cases — from building this toolkit</h2>
+      <p>Not theory, and not the author's private projects: these happened while building the plugin itself — and the discipline is visible in every one.</p>
     </div>
     <div class="cases">
 
       <div class="case">
         <div class="idx">1</div>
         <div class="body">
-          <h3>Auditoría de walk_forward.py</h3>
-          <div class="meta">Flujo 01 · PAL (“El Manager”)</div>
-          <p>GLM auditó el orquestador del walk-forward. Por su cuenta redescubrió dos fugas de datos reales y validó que un tercer bug ya estaba corregido — sin alucinar ni un fichero. Ese tercer bug acabó commiteado.</p>
+          <h3>Choosing the architecture</h3>
+          <div class="meta">Lever 2 · /debate</div>
+          <p>A <code>/debate</code> session weighed packaging this as a native Claude Code plugin against a hand-rolled setup, cross-checked against the official docs. The plugin won: one versioned, installable unit, with the secret handled natively. The decision was stress-tested, not assumed.</p>
           <div class="outcome">
-            <span class="chip">2 leaks reales</span>
-            <span class="chip">1 bug validado</span>
-            <span class="chip">0 alucinaciones</span>
-          </div>
-        </div>
-      </div>
-
-      <div class="case">
-        <div class="idx">2</div>
-        <div class="body">
-          <h3>Red-team de un prompt, cruzando modelos</h3>
-          <div class="meta">Flujo 02 · /interceptor</div>
-          <p>GLM-5.2 leyó los dos ficheros del prompt, citó líneas exactas y aportó ~12 huecos reales. El hallazgo estrella: descomponer Δ_total = Δ_pool + Δ_criterio, que dejó ver que el placebo era el estimador central. En la adjudicación, los 12 se mantuvieron como honestos.</p>
-          <div class="outcome">
-            <span class="chip">~12 huecos reales</span>
-            <span class="chip">citas línea-exactas</span>
-            <span class="chip">0 ficheros inventados</span>
+            <span class="chip">decision stress-tested</span>
+            <span class="chip">cross-checked vs docs</span>
           </div>
         </div>
       </div>
 
       <div class="case live">
+        <div class="idx">2</div>
+        <div class="body">
+          <h3>Making it model-agnostic</h3>
+          <div class="meta">Live · the discipline on the toolkit itself</div>
+          <p>The second model recommended keeping <code>DEFAULT_MODEL=auto</code> — the right call. But its stated <em>reason</em> was wrong. Claude verified against PAL's actual source (<code>providers/registries/base.py</code>, <code>providers/openrouter.py</code>) and corrected the mechanism. The conclusion stood; the reasoning didn't. Exactly what "verify, don't trust" looks like.</p>
+          <div class="outcome">
+            <span class="chip">right conclusion</span>
+            <span class="chip">wrong mechanism</span>
+            <span class="chip">caught by reading the source</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="case">
         <div class="idx">3</div>
         <div class="body">
-          <h3>Esta misma página</h3>
-          <div class="meta">Flujo de generación · PAL chat</div>
-          <p>El HTML que estás leyendo lo redactó GLM-5.2 a partir de un brief que Claude escribió y verificó. Claude revisó que no se colara ninguna capacidad inventada antes de guardarlo en tu Escritorio. Colaboración en vivo, no maqueta.</p>
+          <h3>This page</h3>
+          <div class="meta">PAL · chat</div>
+          <p>The second model proposed this page's structure; Claude authored and verified every factual claim against the repo, dropping anything it couldn't ground — including a "1M context" line that was no longer true by default. Live collaboration, not a mockup.</p>
           <div class="outcome">
-            <span class="chip">GLM diseña</span>
-            <span class="chip">Claude verifica</span>
-            <span class="chip">cero capacidades fantasma</span>
+            <span class="chip">second model designs</span>
+            <span class="chip">Claude verifies</span>
+            <span class="chip">zero phantom features</span>
           </div>
         </div>
       </div>
@@ -460,21 +449,28 @@
   </div>
 </section>
 
-<!-- REGLA DE ORO -->
-<section>
+<!-- EXTEND IT -->
+<section style="padding-top:0">
   <div class="wrap">
-    <div class="golden">
-      <span class="glabel">Regla de oro</span>
-      <h2>Lo que diga GLM no vale hasta verificarlo contra el código real o la traza.</h2>
-      <p>La verificación corta en los dos sentidos: pilla un bug real <strong>y</strong> también desmiente una falsa sospecha de alucinación. Sin verificación no hay confianza; con verificación, el contraste se convierte en ventaja.</p>
-      <div class="pattern">
-        <span class="step">delegar</span>
-        <span class="arrow">→</span>
-        <span class="step">adjudicar</span>
-        <span class="arrow">→</span>
-        <span class="step">gate GO / NO-GO</span>
+    <div class="sec-head">
+      <h2>Make it yours</h2>
+      <p>The two skills are a starting point, not the ceiling.</p>
+    </div>
+    <div class="xgrid">
+      <div class="xcard">
+        <h4>Any OpenRouter model</h4>
+        <p>Name it per call — <code>openai/gpt-5</code>, <code>google/gemini-2.5-pro</code>, <code>x-ai/grok-4</code>, <code>deepseek/*</code>… GLM-5.2 is just the default; there's no allowlist.</p>
+      </div>
+      <div class="xcard">
+        <h4>The full PAL menu</h4>
+        <p>17 tools, callable directly — just ask Claude to use them (<em>“have the second model trace this”</em>). The two skills only wrap the most common loops.</p>
+      </div>
+      <div class="xcard">
+        <h4>Add your own skill</h4>
+        <p>Fork the repo and drop a <code>SKILL.md</code> next to <code>/interceptor</code> and <code>/debate</code>. Same plugin, your own choreography of the loop.</p>
       </div>
     </div>
+    <div class="xnote">Note: GLM's full <strong>1M-token context</strong> is an <strong>opt-in</strong> config — by default it uses a generic ~32K window. Most second-opinion work doesn't need 1M; enable it for heavy multi-file reads.</div>
   </div>
 </section>
 
@@ -482,9 +478,10 @@
   <div class="wrap">
     claude-glm-toolkit
     <span class="sep">·</span>
-    Claude orquesta y ejecuta · GLM asesora y contrasta
+    Claude orchestrates and executes · the second model advises and contrasts
     <span class="sep">·</span>
-    Verifica siempre contra fichero:línea
+    always verify against file:line
+    <span class="built">Built by its author, road-tested on real projects.</span>
   </div>
 </footer>
 

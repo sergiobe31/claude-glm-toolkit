@@ -9,8 +9,6 @@
       ],
       "env": {
         "OPENROUTER_API_KEY": "${user_config.openrouter_api_key}",
-        "OPENROUTER_ALLOWED_MODELS": "z-ai/glm-5.2",
-        "OPENROUTER_MODELS_CONFIG_PATH": "${CLAUDE_PLUGIN_ROOT}/config/pal_openrouter_models.json",
         "DEFAULT_MODEL": "auto",
         "LOG_LEVEL": "INFO"
       }

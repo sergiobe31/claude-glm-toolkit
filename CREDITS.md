@@ -25,7 +25,7 @@ read the TL;DR.
 
 ### 1. The second model itself — `BeehiveInnovations/pal-mcp-server` — *the biggest piece*
 
-Everything that actually talks to GLM-5.2 — every `mcp__…_pal__*` tool (`chat`, `consensus`,
+Everything that actually talks to the second model (GLM-5.2 by default) — every `mcp__…_pal__*` tool (`chat`, `consensus`,
 `challenge`, `thinkdeep`, `planner`, `codereview`, `precommit`, `secaudit`, `testgen`, `refactor`,
 `debug`, `tracer`, `docgen`, `analyze`, `listmodels`, `apilookup`, `version`) — is the **PAL MCP
 server**. This project **does not fork, vendor, or modify it**: `.mcp.json` launches it straight from
@@ -80,14 +80,18 @@ These are the parts written for this toolkit. They were authored by **Sergio in 
    - `plugins/claude-glm-toolkit/.claude-plugin/plugin.json` — the manifest + the `userConfig`
      `openrouter_api_key` marked `sensitive` (→ system keychain, never in the repo).
    - `plugins/claude-glm-toolkit/.mcp.json` — the wiring: `${user_config.openrouter_api_key}`,
-     `${CLAUDE_PLUGIN_ROOT}`, `OPENROUTER_ALLOWED_MODELS=z-ai/glm-5.2`, bare `uvx` for portability.
+     `DEFAULT_MODEL=auto`, and bare `uvx` for portability (the `OPENROUTER_ALLOWED_MODELS` allowlist and
+     the `${CLAUDE_PLUGIN_ROOT}` registry path were removed in the model-agnostic shift — see item 2).
    - *This is what makes "bring your own key, never share mine" work by design.*
 
 2. **The GLM-5.2 1M-context fix** — `plugins/claude-glm-toolkit/config/pal_openrouter_models.json`.
    Diagnosed that PAL falls back to a generic 32K window for models it doesn't know
    (`providers/openrouter.py:_lookup_capabilities`), which was silently capping GLM. Declared
    `z-ai/glm-5.2` with its real **1,048,576**-token window so the registry hit bypasses the fallback.
-   This is original troubleshooting + fix, not borrowed.
+   This is original troubleshooting + fix, not borrowed. *Now shipped as an **opt-in**: the default
+   `.mcp.json` no longer wires it (the custom registry **replaces** PAL's bundled one, which would cap
+   every other model at 32K), so any OpenRouter model keeps its correct window and GLM users opt in
+   for the full 1M.*
 
 3. **The cross-model adjudication discipline** — the rule that GLM's output is a *proposal, never
    truth*, until verified claim-by-claim against ground truth (`file:line` / source / trace) and
