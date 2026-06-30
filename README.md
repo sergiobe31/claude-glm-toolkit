@@ -36,10 +36,12 @@ honest.
 
 ## How the cross-model interaction actually works (the mechanism)
 
-1. The plugin bundles an **MCP server** ("PAL", `BeehiveInnovations/pal-mcp-server`, run via `uvx`)
-   that connects to **OpenRouter** (GLM-5.2 by default; **any** OpenRouter model works — see *Choosing
-   the second model*) and exposes it as the tools above. When the plugin is enabled, Claude Code starts
-   this server and the tools become callable by the main Claude.
+1. The plugin bundles an **MCP server** ("PAL", run via `uvx`) that connects to **OpenRouter**
+   (GLM-5.2 by default; **any** OpenRouter model works — see *Choosing the second model*) and exposes
+   it as the tools above. PAL runs as a **minimal fork** (`sergiobe31/pal-mcp-server`, pinned by SHA)
+   whose only change is a one-file patch enabling OpenRouter reasoning — see *Reasoning* below and
+   **[CREDITS.md](CREDITS.md)**. When the plugin is enabled, Claude Code starts this server and the
+   tools become callable by the main Claude.
 2. **Division of labor:** the **main Claude orchestrates and gathers ground truth** — it has file,
    web, and repo access. **GLM reasons/critiques over what Claude passes it** (in the prompt, or as
    attached file paths). GLM has **no web/file browsing of its own**.
@@ -52,6 +54,18 @@ honest.
 
 So "interaction between models" = the main Claude calling the GLM tools, then **adjudicating** the
 result. Never a blind hand-off.
+
+### Reasoning
+
+GLM-5.2 runs with **OpenRouter reasoning enabled** — the fork maps PAL's per-call `thinking_mode`
+(minimal/low/medium/high/max) onto OpenRouter's `reasoning` effort, and prepends the model's
+`<reasoning>` trace to its answer. Claude calls GLM at **xhigh** (`thinking_mode: max`) by default and
+dials down for trivial tasks.
+
+It's **generalizable but opt-in per model**: only models with `supports_extended_thinking: true` in
+`config/pal_openrouter_models.json` get reasoning. By default that's **only `z-ai/glm-5.2`** — every
+other model is byte-identical to upstream PAL. To enable reasoning for another OpenRouter model, flip
+its flag to `true`; to disable GLM's, flip it to `false`.
 
 ---
 

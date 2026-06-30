@@ -28,12 +28,20 @@ read the TL;DR.
 Everything that actually talks to the second model (GLM-5.2 by default) — every `mcp__…_pal__*` tool (`chat`, `consensus`,
 `challenge`, `thinkdeep`, `planner`, `codereview`, `precommit`, `secaudit`, `testgen`, `refactor`,
 `debug`, `tracer`, `docgen`, `analyze`, `listmodels`, `apilookup`, `version`) — is the **PAL MCP
-server**. This project **does not fork, vendor, or modify it**: `.mcp.json` launches it straight from
-its upstream git repo via `uvx`. None of that code is mine.
+server** — authored by **BeehiveInnovations**. Essentially all of that code is theirs, not mine.
 
-- Source: https://github.com/BeehiveInnovations/pal-mcp-server
-- How it's used here: invoked as-is via `uvx --from git+…`; see `plugins/claude-glm-toolkit/.mcp.json`.
-- License: per the upstream repo — not redistributed here, so its own terms apply.
+This plugin runs a **minimal fork** of PAL with exactly **one** change: a ~46-line patch to
+`providers/openai_compatible.py` that maps PAL's per-call `thinking_mode` onto OpenRouter's
+`reasoning` request-body field — so reasoning-capable OpenRouter models actually reason — and
+surfaces the returned reasoning trace. It is gated on the OpenRouter provider **and** the registry's
+`supports_extended_thinking` flag, so it is byte-identical to upstream for every other model and for
+non-OpenRouter providers. Everything else in PAL is upstream's, unmodified.
+
+- Upstream source: https://github.com/BeehiveInnovations/pal-mcp-server (commit `7afc7c1`, v9.8.2)
+- Our fork: https://github.com/sergiobe31/pal-mcp-server (branch `openrouter-reasoning`), pinned by
+  SHA in `plugins/claude-glm-toolkit/.mcp.json`. `git diff 7afc7c1..<fork-sha>` shows exactly the
+  one-file reasoning patch — nothing else.
+- License: per the upstream repo — the fork preserves it; upstream's terms apply.
 
 ### 2. `/interceptor` skeleton & SKILL conventions — `affaan-m/ECC` (MIT)
 
