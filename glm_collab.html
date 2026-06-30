@@ -445,6 +445,48 @@
         </div>
       </div>
 
+      <div class="case live">
+        <div class="idx">4</div>
+        <div class="body">
+          <h3>The second model was silently capped at 32K</h3>
+          <div class="meta">Live · verify, don't trust — on the plumbing</div>
+          <p>GLM kept refusing files it should have read. Claude traced it to PAL's bundled registry not listing GLM (<code>providers/openrouter.py</code>), so it fell back to a generic ~32K window — a per-call file budget of only ~3.5K tokens. A superset registry restored GLM's real 1M window and the budget jumped to ~268K. Proven by handing GLM the exact batch it had just rejected — and watching it read it.</p>
+          <div class="outcome">
+            <span class="chip">root cause in the source</span>
+            <span class="chip">~3.5K → ~268K tokens/call</span>
+            <span class="chip">verified live</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="case live">
+        <div class="idx">5</div>
+        <div class="body">
+          <h3>Teaching the second model to reason</h3>
+          <div class="meta">Live · a verified gap, fixed and proven</div>
+          <p>GLM-5.2 supports step-by-step reasoning, but PAL's request path never sent OpenRouter's <code>reasoning</code> field — so it never reasoned, and PAL discarded the trace. Claude confirmed the gap in the source (<code>providers/openai_compatible.py</code>), patched it in a minimal, gated fork (only flagged models; byte-identical to upstream otherwise), and proved it live: GLM now returns its <code>&lt;reasoning&gt;</code> trace at xhigh, dialable per call.</p>
+          <div class="outcome">
+            <span class="chip">gap found in the source</span>
+            <span class="chip">minimal gated fork</span>
+            <span class="chip">reasoning verified live</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="case live">
+        <div class="idx">6</div>
+        <div class="body">
+          <h3>The second model red-teams its own setup</h3>
+          <div class="meta">Live · a verdict stronger than either side</div>
+          <p>Asked to attack the fork's design, GLM caught a real flaw — a gate that would have changed behavior for 12 models, not one. But its proposed fix would have broken: PAL rejects unknown registry fields (<code>providers/registries/base.py</code>). Claude kept the valid catch, refuted two false alarms with the source and the OpenRouter API, and shipped a design neither side had alone.</p>
+          <div class="outcome">
+            <span class="chip">real flaw caught</span>
+            <span class="chip">broken fix refuted</span>
+            <span class="chip">synthesis shipped</span>
+          </div>
+        </div>
+      </div>
+
     </div>
   </div>
 </section>
@@ -470,7 +512,7 @@
         <p>Fork the repo and drop a <code>SKILL.md</code> next to <code>/interceptor</code> and <code>/debate</code>. Same plugin, your own choreography of the loop.</p>
       </div>
     </div>
-    <div class="xnote">Note: GLM's full <strong>1M-token context</strong> is an <strong>opt-in</strong> config — by default it uses a generic ~32K window. Most second-opinion work doesn't need 1M; enable it for heavy multi-file reads.</div>
+    <div class="xnote">Update: GLM-5.2 now ships at its full <strong>1M-token context</strong> and with <strong>OpenRouter reasoning</strong> on by default (xhigh, dialable per call) — both wired in and verified live against the running server (see the real cases above). Reasoning rides a minimal, SHA-pinned fork of PAL; every non-flagged model stays byte-identical to upstream.</div>
   </div>
 </section>
 

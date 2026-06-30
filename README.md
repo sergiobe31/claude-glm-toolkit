@@ -36,10 +36,12 @@ honest.
 
 ## How the cross-model interaction actually works (the mechanism)
 
-1. The plugin bundles an **MCP server** ("PAL", `BeehiveInnovations/pal-mcp-server`, run via `uvx`)
-   that connects to **OpenRouter** (GLM-5.2 by default; **any** OpenRouter model works — see *Choosing
-   the second model*) and exposes it as the tools above. When the plugin is enabled, Claude Code starts
-   this server and the tools become callable by the main Claude.
+1. The plugin bundles an **MCP server** ("PAL", run via `uvx`) that connects to **OpenRouter**
+   (GLM-5.2 by default; **any** OpenRouter model works — see *Choosing the second model*) and exposes
+   it as the tools above. PAL runs as a **minimal fork** (`sergiobe31/pal-mcp-server`, pinned by SHA)
+   whose only change is a one-file patch enabling OpenRouter reasoning — see *Reasoning* below and
+   **[CREDITS.md](CREDITS.md)**. When the plugin is enabled, Claude Code starts this server and the
+   tools become callable by the main Claude.
 2. **Division of labor:** the **main Claude orchestrates and gathers ground truth** — it has file,
    web, and repo access. **GLM reasons/critiques over what Claude passes it** (in the prompt, or as
    attached file paths). GLM has **no web/file browsing of its own**.
@@ -52,6 +54,18 @@ honest.
 
 So "interaction between models" = the main Claude calling the GLM tools, then **adjudicating** the
 result. Never a blind hand-off.
+
+### Reasoning
+
+GLM-5.2 runs with **OpenRouter reasoning enabled** — the fork maps PAL's per-call `thinking_mode`
+(minimal/low/medium/high/max) onto OpenRouter's `reasoning` effort, and prepends the model's
+`<reasoning>` trace to its answer. Claude calls GLM at **xhigh** (`thinking_mode: max`) by default and
+dials down for trivial tasks.
+
+It's **generalizable but opt-in per model**: only models with `supports_extended_thinking: true` in
+`config/pal_openrouter_models.json` get reasoning. By default that's **only `z-ai/glm-5.2`** — every
+other model is byte-identical to upstream PAL. To enable reasoning for another OpenRouter model, flip
+its flag to `true`; to disable GLM's, flip it to `false`.
 
 ---
 
@@ -112,10 +126,11 @@ model per call* and **any OpenRouter model works**:
 - **No cost guard:** there's no `OPENROUTER_ALLOWED_MODELS` allowlist, so PAL will use whatever model
   you (or a skill) name — including expensive ones. To hard-limit to one model for cost safety, add
   `"OPENROUTER_ALLOWED_MODELS": "your/model"` back to `.mcp.json`.
-- **GLM at 1M:** PAL doesn't ship GLM's true 1M window, so by default GLM runs at the generic ~32K.
-  For GLM's full 1M context, opt in via `config/pal_openrouter_models.json` (see that file's notes; it
-  *replaces* the bundled registry, so use it only when GLM is your sole model). Most second-opinion
-  uses don't need 1M.
+- **GLM at 1M + reasoning (default):** `config/pal_openrouter_models.json` is a **superset** registry
+  wired by default (`OPENROUTER_MODELS_CONFIG_PATH`), so GLM-5.2 runs at its full **1M** window while
+  every other model keeps its correct one. Reasoning is on too (see *Reasoning*): only GLM is flagged
+  `supports_extended_thinking`, so other models are byte-identical to upstream. This rides a small PAL
+  fork pinned by SHA — see CREDITS.
 - **`/debate` caveat:** its value comes from a *different-vendor* model. Point it at an `anthropic/*`
   model and it becomes Claude-vs-Claude — the different-distribution benefit is largely lost.
 
@@ -132,10 +147,10 @@ claude-glm-toolkit/
 ├── .claude-plugin/marketplace.json            # the marketplace catalog ("sergio-tools")
 └── plugins/claude-glm-toolkit/                # the self-contained plugin
     ├── .claude-plugin/plugin.json             # manifest + userConfig (openrouter_api_key, sensitive)
-    ├── .mcp.json                              # PAL server: bare uvx, ${user_config.openrouter_api_key}, DEFAULT_MODEL=auto
+    ├── .mcp.json                              # PAL server: pinned reasoning fork + superset registry, ${user_config.openrouter_api_key}, DEFAULT_MODEL=auto
     ├── references/adjudication-protocol.md     # the verify-don't-trust protocol both skills share
     ├── skills/{interceptor,debate}/SKILL.md
-    └── config/pal_openrouter_models.json      # GLM-5.2 @ 1M context — OPT-IN (not wired by default; see Choosing the second model)
+    └── config/pal_openrouter_models.json      # superset registry (27 base + GLM @ 1M); wired by default — only GLM flagged for reasoning
 ```
 
 ## How it's built (record of decisions)
@@ -149,11 +164,12 @@ claude-glm-toolkit/
   caller names the model per call and **any** OpenRouter model works. This was decided via a GLM
   consult adjudicated against PAL's own source (the engine, not memory) — see *Choosing the second
   model*.
-- **Config:** the 1M-context GLM registry is shipped in `config/` as an **opt-in** — the default
-  `.mcp.json` no longer wires it, so any OpenRouter model keeps its correct window. Enable it via
-  `${CLAUDE_PLUGIN_ROOT}` only when GLM is your sole model (it *replaces* PAL's bundled registry).
-- **Portability:** PAL launches with **bare `uvx`** (resolves via `$PATH`), so it works across
-  machines without hard-coded paths.
+- **Config:** `config/pal_openrouter_models.json` is a **superset** registry (PAL's 27 bundled models
+  verbatim + GLM-5.2 @ 1M), wired by default via `OPENROUTER_MODELS_CONFIG_PATH`, so GLM gets 1M while
+  every other model keeps its correct window.
+- **Reasoning:** PAL is pinned by SHA to a minimal fork (`sergiobe31/pal-mcp-server`) that maps
+  `thinking_mode` onto OpenRouter's `reasoning` field. Only models flagged `supports_extended_thinking`
+  reason — by default just GLM-5.2; everything else is byte-identical to upstream. See CREDITS / issue #462.
 
 ## Credits & license
 
@@ -169,7 +185,8 @@ This toolkit is built on other people's work, and it matters to be clear about w
 
 **Original to this project (Sergio, with Claude):**
 - The **packaging** as a native Claude Code plugin (marketplace + manifest + keychain-backed key + MCP wiring).
-- The GLM-5.2 **1M-context fix** (`config/pal_openrouter_models.json`) — diagnosed and declared so PAL stops falling back to 32K; now shipped **opt-in** (any model is the default).
+- The GLM-5.2 **1M-context fix** (`config/pal_openrouter_models.json`, a superset registry) — diagnosed and declared so PAL stops falling back to 32K; **wired by default**.
+- The **OpenRouter reasoning fix** — a minimal SHA-pinned PAL fork that maps `thinking_mode` onto OpenRouter's `reasoning` field (GLM reasons at xhigh by default); see CREDITS / issue #462.
 - The **claim-by-claim adjudication discipline** (REAL / SMELL / FALSE-POSITIVE / HALLUCINATION) that makes the second model safe to rely on.
 - The two **skills as written** and all the **docs** (README, CLAUDE.md, the `glm_collab.html` brief).
 

@@ -16,8 +16,9 @@ read the TL;DR.
 - The **"modify, don't execute" guard** is a pattern from
   [`linshenkx/prompt-optimizer`](https://github.com/linshenkx/prompt-optimizer) (no code copied).
 - **What is original here:** the *packaging* into a native Claude Code plugin, the *GLM 1M-context
-  fix*, the *claim-by-claim cross-model adjudication discipline*, and the *two skills as written* plus
-  the *documentation* — authored by **Sergio together with Claude** (Anthropic's Claude Code).
+  fix*, the *OpenRouter reasoning fix* (a minimal PAL fork), the *claim-by-claim cross-model
+  adjudication discipline*, and the *two skills as written* plus the *documentation* — authored by
+  **Sergio together with Claude** (Anthropic's Claude Code).
 
 ---
 
@@ -28,12 +29,20 @@ read the TL;DR.
 Everything that actually talks to the second model (GLM-5.2 by default) — every `mcp__…_pal__*` tool (`chat`, `consensus`,
 `challenge`, `thinkdeep`, `planner`, `codereview`, `precommit`, `secaudit`, `testgen`, `refactor`,
 `debug`, `tracer`, `docgen`, `analyze`, `listmodels`, `apilookup`, `version`) — is the **PAL MCP
-server**. This project **does not fork, vendor, or modify it**: `.mcp.json` launches it straight from
-its upstream git repo via `uvx`. None of that code is mine.
+server** — authored by **BeehiveInnovations**. Essentially all of that code is theirs, not mine.
 
-- Source: https://github.com/BeehiveInnovations/pal-mcp-server
-- How it's used here: invoked as-is via `uvx --from git+…`; see `plugins/claude-glm-toolkit/.mcp.json`.
-- License: per the upstream repo — not redistributed here, so its own terms apply.
+This plugin runs a **minimal fork** of PAL with exactly **one** change: a ~46-line patch to
+`providers/openai_compatible.py` that maps PAL's per-call `thinking_mode` onto OpenRouter's
+`reasoning` request-body field — so reasoning-capable OpenRouter models actually reason — and
+surfaces the returned reasoning trace. It is gated on the OpenRouter provider **and** the registry's
+`supports_extended_thinking` flag, so it is byte-identical to upstream for every other model and for
+non-OpenRouter providers. Everything else in PAL is upstream's, unmodified.
+
+- Upstream source: https://github.com/BeehiveInnovations/pal-mcp-server (commit `7afc7c1`, v9.8.2)
+- Our fork: https://github.com/sergiobe31/pal-mcp-server (branch `openrouter-reasoning`), pinned by
+  SHA in `plugins/claude-glm-toolkit/.mcp.json`. `git diff 7afc7c1..<fork-sha>` shows exactly the
+  one-file reasoning patch — nothing else.
+- License: per the upstream repo — the fork preserves it; upstream's terms apply.
 
 ### 2. `/interceptor` skeleton & SKILL conventions — `affaan-m/ECC` (MIT)
 
@@ -82,18 +91,18 @@ These are the parts written for this toolkit. They were authored by **Sergio in 
    - `plugins/claude-glm-toolkit/.claude-plugin/plugin.json` — the manifest + the `userConfig`
      `openrouter_api_key` marked `sensitive` (→ system keychain, never in the repo).
    - `plugins/claude-glm-toolkit/.mcp.json` — the wiring: `${user_config.openrouter_api_key}`,
-     `DEFAULT_MODEL=auto`, and bare `uvx` for portability (the `OPENROUTER_ALLOWED_MODELS` allowlist and
-     the `${CLAUDE_PLUGIN_ROOT}` registry path were removed in the model-agnostic shift — see item 2).
+     `DEFAULT_MODEL=auto`, `OPENROUTER_MODELS_CONFIG_PATH` (the superset registry, item 2), and `uvx`
+     pinned by SHA to the reasoning fork (item 6).
    - *This is what makes "bring your own key, never share mine" work by design.*
 
 2. **The GLM-5.2 1M-context fix** — `plugins/claude-glm-toolkit/config/pal_openrouter_models.json`.
    Diagnosed that PAL falls back to a generic 32K window for models it doesn't know
    (`providers/openrouter.py:_lookup_capabilities`), which was silently capping GLM. Declared
    `z-ai/glm-5.2` with its real **1,048,576**-token window so the registry hit bypasses the fallback.
-   This is original troubleshooting + fix, not borrowed. *Now shipped as an **opt-in**: the default
-   `.mcp.json` no longer wires it (the custom registry **replaces** PAL's bundled one, which would cap
-   every other model at 32K), so any OpenRouter model keeps its correct window and GLM users opt in
-   for the full 1M.*
+   This is original troubleshooting + fix, not borrowed. *Now wired by **default**: the registry is a
+   **superset** (PAL's 27 bundled models verbatim + GLM @ 1M), so GLM gets its full window while every
+   other model keeps the correct one — no opt-in needed. Per-call file budget for GLM goes from ~3.5K
+   to ~268K tokens.*
 
 3. **The cross-model adjudication discipline** — the rule that GLM's output is a *proposal, never
    truth*, until verified claim-by-claim against ground truth (`file:line` / source / trace) and
@@ -110,6 +119,15 @@ These are the parts written for this toolkit. They were authored by **Sergio in 
    `glm_collab.html` (the visual map: Claude wrote & verified the factual content, GLM-5.2 did the
    visual design — a collaboration artifact, labeled as such).
 
+6. **The OpenRouter reasoning fix** — a minimal, SHA-pinned fork of PAL
+   ([`sergiobe31/pal-mcp-server`](https://github.com/sergiobe31/pal-mcp-server), branch
+   `openrouter-reasoning`) whose one-file patch maps PAL's per-call `thinking_mode` onto OpenRouter's
+   `reasoning` request field and surfaces the returned trace — so GLM-5.2 actually reasons (xhigh by
+   default). Gated on `supports_extended_thinking` + the OpenRouter provider, so it's byte-identical to
+   upstream for every other model. Diagnosed against upstream source, verified live, and reported back
+   to upstream ([issue #462](https://github.com/BeehiveInnovations/pal-mcp-server/issues/462)). Original
+   work (Sergio + Claude); the fork preserves upstream's license.
+
 ---
 
 ## Honest scale check
@@ -117,10 +135,10 @@ These are the parts written for this toolkit. They were authored by **Sergio in 
 It would be wrong to read this repo as "I built a second-model collaboration engine." The heavy
 lifting of *actually talking to a second model* belongs to **pal-mcp-server**, and the two skills grew
 from other people's skeletons and designs. My contribution is the **integration, the 1M-context fix,
-the adjudication discipline, and the documentation** — the layer that turns a generic MCP bridge into
-a disciplined, installable Claude + GLM workflow where the second model is verified rather than
-trusted. That layer is real and is mine (with Claude); the engine underneath is theirs. Credit to all
-of the above.
+the OpenRouter reasoning fix, the adjudication discipline, and the documentation** — the layer that
+turns a generic MCP bridge into a disciplined, installable Claude + GLM workflow where the second
+model is verified rather than trusted. That layer is real and is mine (with Claude); the engine
+underneath is theirs. Credit to all of the above.
 
 ---
 
