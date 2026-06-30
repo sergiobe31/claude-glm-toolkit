@@ -4,11 +4,12 @@
       "command": "uvx",
       "args": [
         "--from",
-        "git+https://github.com/BeehiveInnovations/pal-mcp-server.git",
+        "git+https://github.com/BeehiveInnovations/pal-mcp-server.git@7afc7c1cc96e23992c8f105f960132c657883bb1",
         "pal-mcp-server"
       ],
       "env": {
         "OPENROUTER_API_KEY": "${user_config.openrouter_api_key}",
+        "OPENROUTER_MODELS_CONFIG_PATH": "${CLAUDE_PLUGIN_ROOT}/config/pal_openrouter_models.json",
         "DEFAULT_MODEL": "auto",
         "LOG_LEVEL": "INFO"
       }
