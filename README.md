@@ -185,7 +185,8 @@ This toolkit is built on other people's work, and it matters to be clear about w
 
 **Original to this project (Sergio, with Claude):**
 - The **packaging** as a native Claude Code plugin (marketplace + manifest + keychain-backed key + MCP wiring).
-- The GLM-5.2 **1M-context fix** (`config/pal_openrouter_models.json`) — diagnosed and declared so PAL stops falling back to 32K; now shipped **opt-in** (any model is the default).
+- The GLM-5.2 **1M-context fix** (`config/pal_openrouter_models.json`, a superset registry) — diagnosed and declared so PAL stops falling back to 32K; **wired by default**.
+- The **OpenRouter reasoning fix** — a minimal SHA-pinned PAL fork that maps `thinking_mode` onto OpenRouter's `reasoning` field (GLM reasons at xhigh by default); see CREDITS / issue #462.
 - The **claim-by-claim adjudication discipline** (REAL / SMELL / FALSE-POSITIVE / HALLUCINATION) that makes the second model safe to rely on.
 - The two **skills as written** and all the **docs** (README, CLAUDE.md, the `glm_collab.html` brief).
 
