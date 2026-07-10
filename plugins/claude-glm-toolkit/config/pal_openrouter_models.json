@@ -7,7 +7,8 @@
     "resync_instructions": "When you bump the PAL SHA in .mcp.json, re-sync this file: re-run the generator against the new commit's conf/openrouter_models.json and re-append the z-ai/glm-5.2 entry (always the last item below). That is the single, reviewable moment where drift could enter.",
     "glm_entry_verified": "z-ai/glm-5.2 confirmed on OpenRouter /api/v1/models: single slug, context_length 1,048,576, no separate [1m] variant. Verified 2026-06-30.",
     "generated": "2026-06-30",
-    "base_model_count": 27
+    "base_model_count": 27,
+    "local_additions": "deepseek/deepseek-v4-pro added 2026-07-10 (NOT a base model, NOT the GLM overlay): 1M context + reasoning verified against OpenRouter /api/v1/models (context_length=1048576; supported_parameters includes 'reasoning' + 'reasoning_effort'). supports_extended_thinking intentionally true. Convention preserved: z-ai/glm-5.2 stays the LAST item; this entry sits before it."
   },
   "models": [
     {
@@ -493,6 +494,24 @@
       "temperature_constraint": "range",
       "description": "xAI's Grok 4.1 Fast Reasoning via OpenRouter (2M context) with vision and advanced reasoning",
       "intelligence_score": 15
+    },
+    {
+      "model_name": "deepseek/deepseek-v4-pro",
+      "aliases": [
+        "deepseek-v4-pro",
+        "deepseekv4pro",
+        "dsv4pro",
+        "v4pro"
+      ],
+      "context_window": 1048576,
+      "max_output_tokens": 384000,
+      "supports_extended_thinking": true,
+      "supports_json_mode": true,
+      "supports_function_calling": true,
+      "supports_images": false,
+      "max_image_size_mb": 0.0,
+      "description": "DeepSeek V4 Pro - MoE 1.6T total / 49B activated, 1M context, reasoning model via OpenRouter (text-only). context_length=1048576 and supported_parameters (reasoning, reasoning_effort) verified against OpenRouter /api/v1/models on 2026-07-10.",
+      "intelligence_score": 18
     },
     {
       "model_name": "z-ai/glm-5.2",
