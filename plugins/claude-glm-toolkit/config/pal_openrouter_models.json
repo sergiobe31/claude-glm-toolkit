@@ -8,7 +8,7 @@
     "glm_entry_verified": "z-ai/glm-5.2 confirmed on OpenRouter /api/v1/models: single slug, context_length 1,048,576, no separate [1m] variant. Verified 2026-06-30.",
     "generated": "2026-06-30",
     "base_model_count": 27,
-    "local_additions": "deepseek/deepseek-v4-pro added 2026-07-10 (NOT a base model, NOT the GLM overlay): 1M context + reasoning verified against OpenRouter /api/v1/models (context_length=1048576; supported_parameters includes 'reasoning' + 'reasoning_effort'). supports_extended_thinking intentionally true. Convention preserved: z-ai/glm-5.2 stays the LAST item; this entry sits before it."
+    "local_additions": "deepseek/deepseek-v4-pro added 2026-07-10 (NOT a base model, NOT the GLM overlay): 1M context + reasoning verified against OpenRouter /api/v1/models (context_length=1048576; supported_parameters includes 'reasoning' + 'reasoning_effort'). supports_extended_thinking intentionally true. Convention preserved: z-ai/glm-5.2 stays the LAST item; this entry sits before it. tencent/hy3:free added 2026-07-11: 262K context + reasoning verified (context_length=262144; supported_parameters includes 'reasoning', 'reasoning_effort', 'include_reasoning'). Free tier, 295B params (21B active). Sits before z-ai/glm-5.2 per convention."
   },
   "models": [
     {
@@ -512,6 +512,23 @@
       "max_image_size_mb": 0.0,
       "description": "DeepSeek V4 Pro - MoE 1.6T total / 49B activated, 1M context, reasoning model via OpenRouter (text-only). context_length=1048576 and supported_parameters (reasoning, reasoning_effort) verified against OpenRouter /api/v1/models on 2026-07-10.",
       "intelligence_score": 18
+    },
+    {
+      "model_name": "tencent/hy3:free",
+      "aliases": [
+        "tencent-hy3",
+        "hy3",
+        "tencent-hy3-free"
+      ],
+      "context_window": 262144,
+      "max_output_tokens": 262144,
+      "supports_extended_thinking": true,
+      "supports_json_mode": false,
+      "supports_function_calling": false,
+      "supports_images": false,
+      "max_image_size_mb": 0.0,
+      "description": "Tencent Hy3 (free) - 295B-parameter MoE (21B active, 192 experts, top-8 routing) with configurable reasoning effort via OpenRouter. 262K context, text-only, free tier. context_length=262144 and supported_parameters (reasoning, reasoning_effort, include_reasoning) verified against OpenRouter /api/v1/models on 2026-07-11.",
+      "intelligence_score": 16
     },
     {
       "model_name": "z-ai/glm-5.2",
