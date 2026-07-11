@@ -8,7 +8,7 @@
     "glm_entry_verified": "z-ai/glm-5.2 confirmed on OpenRouter /api/v1/models: single slug, context_length 1,048,576, no separate [1m] variant. Verified 2026-06-30.",
     "generated": "2026-06-30",
     "base_model_count": 27,
-    "local_additions": "deepseek/deepseek-v4-pro added 2026-07-10 (NOT a base model, NOT the GLM overlay): 1M context + reasoning verified against OpenRouter /api/v1/models (context_length=1048576; supported_parameters includes 'reasoning' + 'reasoning_effort'). supports_extended_thinking intentionally true. Convention preserved: z-ai/glm-5.2 stays the LAST item; this entry sits before it. tencent/hy3:free added 2026-07-11: 262K context + reasoning verified (context_length=262144; supported_parameters includes 'reasoning', 'reasoning_effort', 'include_reasoning'). Free tier, 295B params (21B active). Sits before z-ai/glm-5.2 per convention."
+    "local_additions": "deepseek/deepseek-v4-pro added 2026-07-10 (NOT a base model, NOT the GLM overlay): 1M context + reasoning verified against OpenRouter /api/v1/models (context_length=1048576; supported_parameters includes 'reasoning' + 'reasoning_effort'). supports_extended_thinking intentionally true. Convention preserved: z-ai/glm-5.2 stays the LAST item; this entry sits before it. tencent/hy3:free added 2026-07-11: 262K context + reasoning + tools + structured_outputs verified (full supported_parameters: reasoning, reasoning_effort, include_reasoning, tools, tool_choice, structured_outputs; supports_json_mode + supports_function_calling both TRUE). Free tier, 295B params (21B active). Sits before z-ai/glm-5.2 per convention. AUDIT FIX 2026-07-11: initial entry had json_mode/function_calling=false due to a truncated supported_parameters listing; corrected to true after fetching the complete list."
   },
   "models": [
     {
@@ -523,11 +523,11 @@
       "context_window": 262144,
       "max_output_tokens": 262144,
       "supports_extended_thinking": true,
-      "supports_json_mode": false,
-      "supports_function_calling": false,
+      "supports_json_mode": true,
+      "supports_function_calling": true,
       "supports_images": false,
       "max_image_size_mb": 0.0,
-      "description": "Tencent Hy3 (free) - 295B-parameter MoE (21B active, 192 experts, top-8 routing) with configurable reasoning effort via OpenRouter. 262K context, text-only, free tier. context_length=262144 and supported_parameters (reasoning, reasoning_effort, include_reasoning) verified against OpenRouter /api/v1/models on 2026-07-11.",
+      "description": "Tencent Hy3 (free) - 295B-parameter MoE (21B active, 192 experts, top-8 routing) with configurable reasoning effort via OpenRouter. 262K context, text-only, free tier. context_length=262144 and full supported_parameters (reasoning, reasoning_effort, include_reasoning, tools, tool_choice, structured_outputs) verified against OpenRouter /api/v1/models on 2026-07-11.",
       "intelligence_score": 16
     },
     {
