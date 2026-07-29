@@ -153,7 +153,9 @@ claude-glm-toolkit/
     ├── references/adjudication-protocol.md     # the verify-don't-trust protocol both skills share
     ├── references/pal-call-conventions.md      # shared PAL mechanics: division of labor, standard call, evidence gate, native tools
     ├── skills/{interceptor,debate}/SKILL.md
-    └── config/pal_openrouter_models.json      # superset registry (27 base + 5 curated, incl. GLM @ 1M); wired by default — 5 models flagged for reasoning
+    ├── scripts/build_registry.py               # registry builder: upstream base @ pinned SHA + overlay (--check for CI)
+    ├── config/pal_registry_overlay.json        # the only hand-edited registry file (5 curated entries + flag overrides)
+    └── config/pal_openrouter_models.json      # GENERATED registry (27 base + 5 curated, incl. GLM @ 1M); wired by default — 5 models flagged for reasoning
 ```
 
 ## How it's built (record of decisions)
@@ -167,10 +169,12 @@ claude-glm-toolkit/
   caller names the model per call and **any** OpenRouter model works. This was decided via a GLM
   consult adjudicated against PAL's own source (the engine, not memory) — see *Choosing the second
   model*.
-- **Config:** `config/pal_openrouter_models.json` is a **superset** registry (PAL's 27 bundled models
-  verbatim + 5 curated entries: GLM-5.2 @ 1M, deepseek-v4-pro, kimi-k3, minimax-m3, hy3:free), wired
-  by default via `OPENROUTER_MODELS_CONFIG_PATH`, so GLM gets 1M while every other model keeps its
-  correct window.
+- **Config:** `config/pal_openrouter_models.json` is a **generated superset** registry — built by
+  `scripts/build_registry.py` from PAL's 27 bundled models (fetched at the SHA pinned in `.mcp.json`)
+  plus the curated overlay `config/pal_registry_overlay.json` (5 added entries: GLM-5.2 @ 1M,
+  deepseek-v4-pro, kimi-k3, minimax-m3, hy3:free; plus intentional `supports_extended_thinking:false`
+  overrides on 11 base models upstream ships as true). Wired by default via
+  `OPENROUTER_MODELS_CONFIG_PATH`, so GLM gets 1M while every other model keeps its correct window.
 - **Reasoning:** PAL is pinned by SHA to a minimal fork (`sergiobe31/pal-mcp-server`) that maps
   `thinking_mode` onto OpenRouter's `reasoning` field. Only models flagged `supports_extended_thinking`
   reason — by default 5 (GLM-5.2, deepseek-v4-pro, kimi-k3, minimax-m3, hy3:free); everything else is
@@ -206,6 +210,10 @@ Licensed **MIT** — see [LICENSE](LICENSE).
 ## Notes / recovery
 - Editing a `SKILL.md` takes effect immediately; changes to `.mcp.json` / `plugin.json` need
   `/reload-plugins` or a restart.
+- Registry maintenance: `config/pal_openrouter_models.json` is **generated** — never edit it by hand.
+  Edit `config/pal_registry_overlay.json` (the only hand-maintained file) and run
+  `python3 plugins/claude-glm-toolkit/scripts/build_registry.py`; `--check` exits 1 if the committed
+  file differs from a fresh build (for CI). Re-run it after any PAL SHA bump in `.mcp.json`.
 - Cost: GLM via OpenRouter ≈ $0.95/M input, $3/M output as of 2026 (other models vary — check
   openrouter.ai for current pricing; with no allowlist there's no cost ceiling). Reach for the second
   model for heavy reading, a second training distribution, or red-teaming, not for trivial things you

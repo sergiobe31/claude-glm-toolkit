@@ -100,8 +100,10 @@ These are the parts written for this toolkit. They were authored by **Sergio in 
    (`providers/openrouter.py:_lookup_capabilities`), which was silently capping GLM. Declared
    `z-ai/glm-5.2` with its real **1,048,576**-token window so the registry hit bypasses the fallback.
    This is original troubleshooting + fix, not borrowed. *Now wired by **default**: the registry is a
-   **superset** (PAL's 27 bundled models verbatim + 5 curated entries, incl. GLM @ 1M), so GLM gets its
-   full window while every other model keeps the correct one — no opt-in needed. Per-call file budget
+   generated **superset** (PAL's 27 bundled models at the pinned SHA + a curated overlay: 5 added
+   entries, incl. GLM @ 1M, plus intentional reasoning-flag overrides on 11 base models — built by
+   `scripts/build_registry.py`), so GLM gets its full window while every other model keeps the correct
+   one — no opt-in needed. Per-call file budget
    for GLM goes from ~3.5K to ~268K tokens.*
 
 3. **The cross-model adjudication discipline** — the rule that GLM's output is a *proposal, never
