@@ -151,6 +151,7 @@ claude-glm-toolkit/
     ├── .claude-plugin/plugin.json             # manifest + userConfig (openrouter_api_key, sensitive)
     ├── .mcp.json                              # PAL server: pinned reasoning fork + superset registry, ${user_config.openrouter_api_key}, DEFAULT_MODEL=auto
     ├── references/adjudication-protocol.md     # the verify-don't-trust protocol both skills share
+    ├── references/pal-call-conventions.md      # shared PAL mechanics: division of labor, standard call, evidence gate, native tools
     ├── skills/{interceptor,debate}/SKILL.md
     └── config/pal_openrouter_models.json      # superset registry (27 base + 5 curated, incl. GLM @ 1M); wired by default — 5 models flagged for reasoning
 ```

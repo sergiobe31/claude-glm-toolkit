@@ -95,15 +95,16 @@ in. Otherwise state your assumptions in the diagnosis.
 ### Phase 5 — Draft (single-model, or cross-model via PAL)
 - **Default (single-model):** Claude drafts the prompt from the rubric below.
 - **Cross-model (when the PAL MCP is available and the idea is non-trivial, or the user opts
-  in):** hand the assembled context + idea + rubric to `mcp__pal__chat`
-  (model: the OpenRouter model the user named for this session — default `z-ai/glm-5.2`;
-  `thinking_mode: high`) to either **(a) draft** the prompt or
+  in):** hand the assembled context + idea + rubric to the second model via the standard call (see
+  `references/pal-call-conventions.md`: `mcp__pal__chat`, session model or default `z-ai/glm-5.2`,
+  `thinking_mode: high`, files via `absolute_file_paths`) to either **(a) draft** the prompt or
   **(b) red-team** Claude's draft (hunt for missing constraints, ambiguities, failure
-  modes). Then **adjudicate** GLM's output per the shared **Adjudication Protocol**
-  (`references/adjudication-protocol.md`, at the plugin root): tag each claim **REAL** / **SMELL** /
-  **FALSE-POSITIVE** / **HALLUCINATION** against the real project (file:line / the project map), drop
-  what GLM invented, keep the verified improvements. Verification cuts both ways — it rescues a real
-  point you'd have cut and kills a plausible hallucination.
+  modes). For a quick one-shot red-team when the full loop is overkill, `mcp__pal__challenge` is a
+  documented shortcut (same file). Then **adjudicate** the output per the shared **Adjudication
+  Protocol** (`references/adjudication-protocol.md`, at the plugin root): tag each claim **REAL** /
+  **SMELL** / **FALSE-POSITIVE** / **HALLUCINATION** against the real project (file:line / the project
+  map), drop what the second model invented, keep the verified improvements. Verification cuts both
+  ways — it rescues a real point you'd have cut and kills a plausible hallucination.
 - Cross-model is **opt-out**: if the user says "no GLM" / "fast" / "rápido", skip it.
 - **Model choice:** any OpenRouter model works (default `z-ai/glm-5.2`). Use whatever model the user
   named for the session; otherwise the default. Heavy multi-file reads (this phase's payoff) need a

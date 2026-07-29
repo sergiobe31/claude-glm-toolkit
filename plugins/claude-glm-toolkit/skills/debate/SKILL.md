@@ -37,14 +37,13 @@ the user (or a later normal request) acts on it.
 - **Don't use:** simple factual lookups, tasks the user wants executed, or trivial choices with
   an obvious default. A one-line question rarely needs a debate.
 
-## Division of labor (important)
+## Division of labor & call conventions
 
-**You gather ground truth; the second model reasons over it.** GLM-5.2 via PAL has no web/file
-browsing of its own — it sees only what you put in the prompt or attach as file paths. So:
-- YOU read the code/files/web, run the cheap checks, establish the facts (you have the tools).
-- The second model attacks/defends from a different training distribution.
-- YOU adjudicate — its output is a *proposal*, never truth, until verified against file:line /
-  trace / source.
+Shared mechanics live in **`references/pal-call-conventions.md`** (at the plugin root): you gather
+ground truth, the second model — which has no file/web access of its own — reasons over what you
+hand it, and you adjudicate. The standard call (`mcp__pal__chat`, session model or default
+`z-ai/glm-5.2`, `thinking_mode: high`, `continuation_id`, `absolute_file_paths`) and the canonical
+evidence gate are defined there; this skill only adds the adversarial framing.
 
 ## The loop
 
@@ -58,12 +57,10 @@ reasoning and your assumptions. This is what the adversary will attack — make 
 hedged.
 
 ### Phase 2 — Adversary round (the second model)
-Hand your position + the context to `mcp__pal__chat` (model: the OpenRouter model the user named for
-this session — default `z-ai/glm-5.2`; `thinking_mode: high`),
-framed to **attack**: find missing constraints, errors, omissions, failure modes; steelman the
-opposite; flag what it lacks context on. Enforce the **evidence gate**: tell it to cite a concrete
-mechanism / file:line / source / reproducible reason for each claim — claims that are just
-assertion get discounted. Pass relevant files via `absolute_file_paths` for grounding. Reuse the
+Hand your position + the context to the second model via the standard call (see
+`references/pal-call-conventions.md`), framed to **attack**: find missing constraints, errors,
+omissions, failure modes; steelman the opposite; flag what it lacks context on. Apply the canonical
+**evidence gate** from that file — claims that are bare assertion get discounted. Reuse the
 `continuation_id` across rounds so the adversary keeps full context.
 
 ### Phase 3 — Adjudicate (never pass raw)
@@ -83,6 +80,9 @@ sake (convergence can be groupthink, not truth).
 ### Phase 5 — Synthesis
 Deliver a verdict that is stronger than either opening position: what survived, what each side
 **conceded**, the decisive evidence, and the open dissents. Make the recommendation explicit.
+For decisions better served by a multi-model vote than a single adversary, consider
+`mcp__pal__consensus` as the synthesis engine (see `references/pal-call-conventions.md`) — its
+output is adjudicated like any other.
 
 ## Guards
 - Advisory-only (informs, doesn't execute).

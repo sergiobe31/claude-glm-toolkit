@@ -1,0 +1,54 @@
+# PAL Call Conventions
+
+The shared mechanics for calling the second model through the PAL MCP (`mcp__pal__*`). Both skills
+— and any ad-hoc second-model call — follow these conventions instead of restating them. For the
+verification discipline applied to the output, see `references/adjudication-protocol.md`.
+
+## Division of labor
+
+**You gather ground truth; the PAL model reasons over what you hand it.** The second model has no
+file/web access of its own — it sees only what you put in the prompt or attach as file paths. So:
+
+- YOU read the code/files/web, run the cheap checks, establish the facts (you have the tools).
+- The second model reasons/critiques from a different training distribution.
+- YOU adjudicate its output per `references/adjudication-protocol.md` — a proposal, never truth,
+  until verified.
+
+## Standard call
+
+Default tool: **`mcp__pal__chat`**.
+
+- **Model:** the OpenRouter model the user named for the session; default `z-ai/glm-5.2`. Any
+  OpenRouter model works.
+- **`thinking_mode: high`** by default — dial down for trivial tasks, up to `max` for hard ones.
+- **`continuation_id`:** each call returns one; reuse it across rounds of the same thread so the
+  second model keeps full context.
+- **`absolute_file_paths`:** pass relevant files this way for grounding instead of pasting large
+  contents into the prompt.
+
+## Evidence gate — canonical phrasing
+
+Every request for critique/review to the second model carries the evidence gate. Canonical
+instruction (reuse verbatim or near-verbatim):
+
+> For every claim, cite a concrete mechanism / file:line / source / reproducible reason. Claims
+> that are bare assertion will be discounted.
+
+The gate is what turns "another model's opinion" into checkable output: claims that fail it carry
+less weight when adjudicated.
+
+## PAL-native alternatives
+
+`chat` is the general channel. Two PAL tools cover common one-shot patterns — consider them when a
+full skill loop is overkill:
+
+- **`mcp__pal__challenge`** — one-shot critical scrutiny: wraps your statement in anti-sycophancy
+  instructions (single model, single pass, no loop). Use it for a quick red-team of a claim, a
+  prompt, or a position when an iterative adversarial exchange isn't warranted.
+- **`mcp__pal__consensus`** — multi-model synthesis: queries several models in parallel (one round;
+  each model+stance pair unique — for/against/neutral) and synthesizes. Use it when a decision
+  benefits from a *vote* across models rather than a single iterative adversary. It is NOT an
+  iterative debate.
+
+**These tools do not replace adjudication.** Their output is second-model output like any other
+and goes through `references/adjudication-protocol.md` before anything is accepted.
