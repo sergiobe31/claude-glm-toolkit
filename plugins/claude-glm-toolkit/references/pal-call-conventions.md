@@ -26,6 +26,24 @@ Default tool: **`mcp__pal__chat`**.
 - **`absolute_file_paths`:** pass relevant files this way for grounding instead of pasting large
   contents into the prompt.
 
+## Graph grounding (optional, for mapped codebases)
+
+When the question is structural and cross-module ("how does X flow into Y?", "is this design
+sound?") and the repo has a [graphify](https://github.com/Graphify-Labs/graphify) graph
+(`graphify-out/graph.json`), ground the call with the graph before or instead of attaching whole
+files:
+
+- Run 1–3 targeted lookups — `graphify explain "<symbol>"`, `graphify path "A" "B"`,
+  `graphify query "<question>"` (narrow, or raise `--budget`) — and paste the resulting subgraphs
+  into the prompt. They are compact, `file:line`-anchored, and carry EXTRACTED/INFERRED confidence
+  tags, which fits the evidence gate.
+- Keep `absolute_file_paths` for the 1–2 files that are truly central; the graph supplies the
+  surrounding structure, the files supply the detail.
+- The graph is a symbol map, not semantics: it anchors *where*, you still verify *why*. Check
+  freshness (`graphify-out/GRAPH_REPORT.md` records the built-from commit) and run
+  `graphify update .` after code changes.
+- For single-function or few-file questions, plain Grep/Read is faster — skip the graph.
+
 ## Evidence gate — canonical phrasing
 
 Every request for critique/review to the second model carries the evidence gate. Canonical
