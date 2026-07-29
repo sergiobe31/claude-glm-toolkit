@@ -100,9 +100,9 @@ These are the parts written for this toolkit. They were authored by **Sergio in 
    (`providers/openrouter.py:_lookup_capabilities`), which was silently capping GLM. Declared
    `z-ai/glm-5.2` with its real **1,048,576**-token window so the registry hit bypasses the fallback.
    This is original troubleshooting + fix, not borrowed. *Now wired by **default**: the registry is a
-   **superset** (PAL's 27 bundled models verbatim + GLM @ 1M), so GLM gets its full window while every
-   other model keeps the correct one — no opt-in needed. Per-call file budget for GLM goes from ~3.5K
-   to ~268K tokens.*
+   **superset** (PAL's 27 bundled models verbatim + 5 curated entries, incl. GLM @ 1M), so GLM gets its
+   full window while every other model keeps the correct one — no opt-in needed. Per-call file budget
+   for GLM goes from ~3.5K to ~268K tokens.*
 
 3. **The cross-model adjudication discipline** — the rule that GLM's output is a *proposal, never
    truth*, until verified claim-by-claim against ground truth (`file:line` / source / trace) and
@@ -123,8 +123,10 @@ These are the parts written for this toolkit. They were authored by **Sergio in 
    ([`sergiobe31/pal-mcp-server`](https://github.com/sergiobe31/pal-mcp-server), branch
    `openrouter-reasoning`) whose one-file patch maps PAL's per-call `thinking_mode` onto OpenRouter's
    `reasoning` request field and surfaces the returned trace — so GLM-5.2 actually reasons (xhigh by
-   default). Gated on `supports_extended_thinking` + the OpenRouter provider, so it's byte-identical to
-   upstream for every other model. Diagnosed against upstream source, verified live, and reported back
+   default). Gated on `supports_extended_thinking` + the OpenRouter provider: the shipped registry flags
+   5 reasoning models (GLM-5.2, deepseek-v4-pro, kimi-k3, minimax-m3, hy3:free) and the fork is
+   byte-identical to upstream for every non-flagged model. Diagnosed against upstream source, verified
+   live, and reported back
    to upstream ([issue #462](https://github.com/BeehiveInnovations/pal-mcp-server/issues/462)). Original
    work (Sergio + Claude); the fork preserves upstream's license.
 

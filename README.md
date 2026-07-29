@@ -63,9 +63,10 @@ GLM-5.2 runs with **OpenRouter reasoning enabled** — the fork maps PAL's per-c
 dials down for trivial tasks.
 
 It's **generalizable but opt-in per model**: only models with `supports_extended_thinking: true` in
-`config/pal_openrouter_models.json` get reasoning. By default that's **only `z-ai/glm-5.2`** — every
-other model is byte-identical to upstream PAL. To enable reasoning for another OpenRouter model, flip
-its flag to `true`; to disable GLM's, flip it to `false`.
+`config/pal_openrouter_models.json` get reasoning. By default **5 models** are flagged —
+`z-ai/glm-5.2`, `deepseek/deepseek-v4-pro`, `moonshotai/kimi-k3`, `minimax/minimax-m3` and
+`tencent/hy3:free` — every other model is byte-identical to upstream PAL. To enable reasoning for
+another OpenRouter model, flip its flag to `true`; to disable one, flip it to `false`.
 
 ---
 
@@ -128,8 +129,9 @@ model per call* and **any OpenRouter model works**:
   `"OPENROUTER_ALLOWED_MODELS": "your/model"` back to `.mcp.json`.
 - **GLM at 1M + reasoning (default):** `config/pal_openrouter_models.json` is a **superset** registry
   wired by default (`OPENROUTER_MODELS_CONFIG_PATH`), so GLM-5.2 runs at its full **1M** window while
-  every other model keeps its correct one. Reasoning is on too (see *Reasoning*): only GLM is flagged
-  `supports_extended_thinking`, so other models are byte-identical to upstream. This rides a small PAL
+  every other model keeps its correct one. Reasoning is on too (see *Reasoning*): 5 models are flagged
+  `supports_extended_thinking` (GLM-5.2, deepseek-v4-pro, kimi-k3, minimax-m3, hy3:free), so all other
+  models are byte-identical to upstream. This rides a small PAL
   fork pinned by SHA — see CREDITS.
 - **`/debate` caveat:** its value comes from a *different-vendor* model. Point it at an `anthropic/*`
   model and it becomes Claude-vs-Claude — the different-distribution benefit is largely lost.
@@ -150,7 +152,7 @@ claude-glm-toolkit/
     ├── .mcp.json                              # PAL server: pinned reasoning fork + superset registry, ${user_config.openrouter_api_key}, DEFAULT_MODEL=auto
     ├── references/adjudication-protocol.md     # the verify-don't-trust protocol both skills share
     ├── skills/{interceptor,debate}/SKILL.md
-    └── config/pal_openrouter_models.json      # superset registry (27 base + GLM @ 1M); wired by default — only GLM flagged for reasoning
+    └── config/pal_openrouter_models.json      # superset registry (27 base + 5 curated, incl. GLM @ 1M); wired by default — 5 models flagged for reasoning
 ```
 
 ## How it's built (record of decisions)
@@ -165,11 +167,13 @@ claude-glm-toolkit/
   consult adjudicated against PAL's own source (the engine, not memory) — see *Choosing the second
   model*.
 - **Config:** `config/pal_openrouter_models.json` is a **superset** registry (PAL's 27 bundled models
-  verbatim + GLM-5.2 @ 1M), wired by default via `OPENROUTER_MODELS_CONFIG_PATH`, so GLM gets 1M while
-  every other model keeps its correct window.
+  verbatim + 5 curated entries: GLM-5.2 @ 1M, deepseek-v4-pro, kimi-k3, minimax-m3, hy3:free), wired
+  by default via `OPENROUTER_MODELS_CONFIG_PATH`, so GLM gets 1M while every other model keeps its
+  correct window.
 - **Reasoning:** PAL is pinned by SHA to a minimal fork (`sergiobe31/pal-mcp-server`) that maps
   `thinking_mode` onto OpenRouter's `reasoning` field. Only models flagged `supports_extended_thinking`
-  reason — by default just GLM-5.2; everything else is byte-identical to upstream. See CREDITS / issue #462.
+  reason — by default 5 (GLM-5.2, deepseek-v4-pro, kimi-k3, minimax-m3, hy3:free); everything else is
+  byte-identical to upstream. See CREDITS / issue #462.
 
 ## Credits & license
 

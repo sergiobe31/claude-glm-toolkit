@@ -4,6 +4,7 @@
 .env.*
 !.env.example
 *.local
+.claude/settings.local.json
 
 # OS / editor
 .DS_Store

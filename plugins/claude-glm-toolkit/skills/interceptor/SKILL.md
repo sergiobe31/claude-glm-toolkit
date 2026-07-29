@@ -107,8 +107,9 @@ in. Otherwise state your assumptions in the diagnosis.
 - Cross-model is **opt-out**: if the user says "no GLM" / "fast" / "rápido", skip it.
 - **Model choice:** any OpenRouter model works (default `z-ai/glm-5.2`). Use whatever model the user
   named for the session; otherwise the default. Heavy multi-file reads (this phase's payoff) need a
-  large-context model — GLM reaches its full 1M only with the opt-in registry (see README/CREDITS);
-  otherwise it caps at ~32K, so prefer a natively large-window model for big reads.
+  large-context model — the bundled superset registry is wired by default, so GLM-5.2 reaches its full
+  1M window out of the box (as do deepseek-v4-pro, kimi-k3 and minimax-m3, also 1M + reasoning; see
+  README/CREDITS). Without it PAL would cap unknown models at ~32K.
 
 ## The prompt rubric (what a finished prompt contains)
 
