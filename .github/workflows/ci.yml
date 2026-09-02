@@ -1,0 +1,27 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Validate JSON manifests
+        run: |
+          python -m json.tool .claude-plugin/marketplace.json > /dev/null
+          python -m json.tool plugins/cross-model-toolkit/.claude-plugin/plugin.json > /dev/null
+          python -m json.tool plugins/cross-model-toolkit/.mcp.json > /dev/null
+          python -m json.tool plugins/cross-model-toolkit/config/pal_registry_overlay.json > /dev/null
+          python -m json.tool plugins/cross-model-toolkit/config/pal_openrouter_models.json > /dev/null
+
+      - name: Generated registry is up to date
+        run: python plugins/cross-model-toolkit/scripts/build_registry.py --check

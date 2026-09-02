@@ -153,6 +153,7 @@ model per call* and **any OpenRouter model works**:
 ```
 cross-model-toolkit/
 ├── README.md                                  # this file (humans)
+├── CHANGELOG.md                               # version history (reconstructed from git)
 ├── CREDITS.md                                 # who built what — borrowed vs original
 ├── LICENSE                                    # MIT (covers the original parts; see CREDITS.md)
 ├── CLAUDE.md                                  # what Claude auto-loads here (incl. cross_model_collab.html upkeep rule)
@@ -231,5 +232,11 @@ Licensed **MIT** — see [LICENSE](LICENSE).
   openrouter.ai for current pricing; with no allowlist there's no cost ceiling). Reach for the second
   model for heavy reading, a second training distribution, or red-teaming, not for trivial things you
   can do inline.
+- Reasoning calls at `thinking_mode: max` can take minutes — give the PAL server a generous tool
+  timeout in your client (the Kimi Code variant uses `toolTimeoutMs: 1200000`; Claude Code's default
+  MCP timeout may need raising too if you see timeouts on heavy calls).
+- Moonshot rate-limits the shared OpenRouter tier for `kimi-k3` (transient 429s,
+  `retry_after` ~20-26s). For heavy/debate use, bring your own Moonshot key at
+  openrouter.ai/settings/integrations (BYOK) and the 429s disappear.
 - This plugin **replaced an earlier scattered setup** (loose skills + a user-scope PAL server), now
   consolidated into one versioned, installable unit.
