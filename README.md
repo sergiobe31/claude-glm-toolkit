@@ -1,13 +1,18 @@
-# claude-glm-toolkit
+# cross-model-toolkit
 
-A **Claude Code plugin** that gives Claude a *second model* — **any OpenRouter model** (GLM-5.2 by
-default) — plus two skills, so Claude can collaborate with a model from a **different training
+> **Renamed 2026-09-02** — this repo was `claude-glm-toolkit`. The old name misdescribed it twice:
+> it is not GLM-only (any OpenRouter model works) and not Claude-only (the same engine runs under
+> Kimi Code — see [docs/kimi-code-variant.md](docs/kimi-code-variant.md)). GitHub redirects the old
+> URL, so existing clones and marketplace entries keep working.
+
+A **Claude Code plugin** that gives your agent a *second model* — **any OpenRouter model** (GLM-5.2
+by default) — plus two skills, so it can collaborate with a model from a **different training
 distribution**. The second model catches what self-review misses; the discipline below keeps it
 honest.
 
 > **This README is documentation for humans** (and for any agent you explicitly point at it).
 > Claude does **not** read it at startup. What Claude auto-loads when the plugin is enabled is the
-> two **skills** (their `SKILL.md`) and the **`.mcp.json`** (which starts the GLM server). This file
+> two **skills** (their `SKILL.md`) and the **`.mcp.json`** (which starts the PAL server). This file
 > exists to record *what this is* and *how to run/verify it*.
 
 ---
@@ -15,7 +20,7 @@ honest.
 ## What it gives you (the tools — no more, no less)
 
 **1. A second model via the bundled "PAL" MCP server** (any OpenRouter model; GLM-5.2 by default). Exposed as tools named
-`mcp__plugin_claude-glm-toolkit_pal__*`. The full menu:
+`mcp__plugin_cross-model-toolkit_pal__*`. The full menu:
 
 | Group | Tools |
 |---|---|
@@ -25,12 +30,12 @@ honest.
 
 **2. Two skills** (namespaced under the plugin):
 
-- **`/claude-glm-toolkit:interceptor <idea>`** — turns a rough idea into a complete, ready-to-paste
-  prompt: captures project context, diagnoses gaps, optionally has GLM draft/red-team the prompt,
-  returns it for review. Advisory — it never executes the task.
-- **`/claude-glm-toolkit:debate <decision>`** — Claude forms a position, GLM attacks it under an
-  *evidence gate*, Claude adjudicates claim-by-claim, then synthesizes a verdict. Capped at 2–3
-  rounds (debate amplifies shared bias after round 1).
+- **`/cross-model-toolkit:interceptor <idea>`** — turns a rough idea into a complete, ready-to-paste
+  prompt: captures project context, diagnoses gaps, optionally has the second model draft/red-team
+  the prompt, returns it for review. Advisory — it never executes the task.
+- **`/cross-model-toolkit:debate <decision>`** — Claude forms a position, the second model attacks
+  it under an *evidence gate*, Claude adjudicates claim-by-claim, then synthesizes a verdict.
+  Capped at 2–3 rounds (debate amplifies shared bias after round 1).
 
 ---
 
@@ -41,32 +46,33 @@ honest.
    it as the tools above. PAL runs as a **minimal fork** (`sergiobe31/pal-mcp-server`, pinned by SHA)
    whose only change is a one-file patch enabling OpenRouter reasoning — see *Reasoning* below and
    **[CREDITS.md](CREDITS.md)**. When the plugin is enabled, Claude Code starts this server and the
-   tools become callable by the main Claude.
-2. **Division of labor:** the **main Claude orchestrates and gathers ground truth** — it has file,
-   web, and repo access. **GLM reasons/critiques over what Claude passes it** (in the prompt, or as
-   attached file paths). GLM has **no web/file browsing of its own**.
-3. **The discipline (non-negotiable):** GLM's output is a *proposal*, never truth, until the main
-   Claude **verifies it claim-by-claim** against ground truth (`file:line` / source / trace) and
-   tags each as **REAL / SMELL / FALSE-POSITIVE / HALLUCINATION**. This is what turns a second model
-   from a liability into an asset.
+   tools become callable by the main agent.
+2. **Division of labor:** the **main agent orchestrates and gathers ground truth** — it has file,
+   web, and repo access. **The second model reasons/critiques over what the main agent passes it**
+   (in the prompt, or as attached file paths). It has **no web/file browsing of its own**.
+3. **The discipline (non-negotiable):** the second model's output is a *proposal*, never truth,
+   until the main agent **verifies it claim-by-claim** against ground truth (`file:line` / source /
+   trace) and tags each as **REAL / SMELL / FALSE-POSITIVE / HALLUCINATION**. This is what turns a
+   second model from a liability into an asset.
 4. The two **skills are pre-built choreographies** of this loop — interceptor for prompt
    drafting/red-teaming, debate for an adversarial decision check.
 
-So "interaction between models" = the main Claude calling the GLM tools, then **adjudicating** the
+So "interaction between models" = the main agent calling the PAL tools, then **adjudicating** the
 result. Never a blind hand-off.
 
 ### Reasoning
 
-GLM-5.2 runs with **OpenRouter reasoning enabled** — the fork maps PAL's per-call `thinking_mode`
-(minimal/low/medium/high/max) onto OpenRouter's `reasoning` effort, and prepends the model's
-`<reasoning>` trace to its answer. Claude calls GLM at **xhigh** (`thinking_mode: max`) by default and
-dials down for trivial tasks.
+Flagged models run with **OpenRouter reasoning enabled** — the fork maps PAL's per-call
+`thinking_mode` (minimal/low/medium/high/max) onto OpenRouter's `reasoning` effort, and prepends the
+model's `<reasoning>` trace to its answer. The skills call the second model at **xhigh**
+(`thinking_mode: max`) by default and dial down for trivial tasks.
 
 It's **generalizable but opt-in per model**: only models with `supports_extended_thinking: true` in
-`config/pal_openrouter_models.json` get reasoning. By default **5 models** are flagged —
-`z-ai/glm-5.2`, `deepseek/deepseek-v4-pro`, `moonshotai/kimi-k3`, `minimax/minimax-m3` and
-`tencent/hy3:free` — every other model is byte-identical to upstream PAL. To enable reasoning for
-another OpenRouter model, flip its flag to `true`; to disable one, flip it to `false`.
+`config/pal_openrouter_models.json` get reasoning. By default **6 models** are flagged —
+`z-ai/glm-5.2`, `deepseek/deepseek-v4-pro`, `moonshotai/kimi-k3`, `minimax/minimax-m3`,
+`tencent/hy3:free` and `openai/gpt-5.6-sol-pro` — every other model is byte-identical to upstream
+PAL. To enable reasoning for another OpenRouter model, flip its flag to `true`; to disable one, flip
+it to `false`.
 
 ---
 
@@ -78,17 +84,17 @@ another OpenRouter model, flip its flag to `true`; to disable one, flip it to `f
 
 **From inside Claude Code** (type these in the prompt; they start with `/`):
 ```
-/plugin marketplace add https://github.com/sergiobe31/claude-glm-toolkit
-/plugin install claude-glm-toolkit@sergio-tools
+/plugin marketplace add https://github.com/sergiobe31/cross-model-toolkit
+/plugin install cross-model-toolkit@sergio-tools
 ```
 → You'll be prompted for **your own OpenRouter API key** (get one at openrouter.ai; stored in your
-system **keychain**, never in the repo). → **Restart** Claude Code (or `/reload-plugins`) so the GLM
+system **keychain**, never in the repo). → **Restart** Claude Code (or `/reload-plugins`) so the PAL
 server starts.
 
 **If the interactive prompts don't surface** (it happened to us — the `/plugin install` /
 `/plugin configure` dialogs didn't appear), use the CLI instead:
 ```
-claude plugin install claude-glm-toolkit@sergio-tools --config openrouter_api_key=YOUR_KEY
+claude plugin install cross-model-toolkit@sergio-tools --config openrouter_api_key=YOUR_KEY
 ```
 The key still lands in the keychain because the manifest marks it `sensitive`.
 
@@ -96,19 +102,23 @@ The key still lands in the keychain because the manifest marks it `sensitive`.
 little credit. Nothing else to set up.
 
 > Maintainer / local dev: `marketplace add` also accepts a local path, e.g.
-> `/plugin marketplace add /path/to/claude-glm-toolkit`.
+> `/plugin marketplace add /path/to/cross-model-toolkit`.
+
+**Not on Claude Code?** The same engine runs under **Kimi Code CLI** (and any MCP-capable agent)
+via a small bootstrapper script — same pinned fork, same registry, key from `.env`, skills at user
+scope. See **[docs/kimi-code-variant.md](docs/kimi-code-variant.md)**.
 
 ## Verify it's live
 ```
-claude mcp list | grep pal                          → plugin:claude-glm-toolkit:pal ... ✔ Connected
-mcp__plugin_claude-glm-toolkit_pal__listmodels      → the OpenRouter catalog (gpt-5, gemini-2.5-pro, claude-*, grok-4, …)
-/claude-glm-toolkit:debate <a decision>             → the skill responds
+claude mcp list | grep pal                          → plugin:cross-model-toolkit:pal ... ✔ Connected
+mcp__plugin_cross-model-toolkit_pal__listmodels     → the OpenRouter catalog (gpt-5, gemini-2.5-pro, claude-*, grok-4, …)
+/cross-model-toolkit:debate <a decision>            → the skill responds
 ```
 
 ## Use it day-to-day
-- Stress-test a decision → `/claude-glm-toolkit:debate <the decision>`
-- Polish a rough idea into a prompt → `/claude-glm-toolkit:interceptor <the idea>`
-- Or just ask Claude: *"get GLM's second opinion on X"* / *"have **gpt-5** red-team Y"* — Claude calls
+- Stress-test a decision → `/cross-model-toolkit:debate <the decision>`
+- Polish a rough idea into a prompt → `/cross-model-toolkit:interceptor <the idea>`
+- Or just ask: *"get GLM's second opinion on X"* / *"have **gpt-5** red-team Y"* — the agent calls
   the PAL tools, with the model you name, and adjudicates the answer.
 
 ---
@@ -129,33 +139,35 @@ model per call* and **any OpenRouter model works**:
   `"OPENROUTER_ALLOWED_MODELS": "your/model"` back to `.mcp.json`.
 - **GLM at 1M + reasoning (default):** `config/pal_openrouter_models.json` is a **superset** registry
   wired by default (`OPENROUTER_MODELS_CONFIG_PATH`), so GLM-5.2 runs at its full **1M** window while
-  every other model keeps its correct one. Reasoning is on too (see *Reasoning*): 5 models are flagged
-  `supports_extended_thinking` (GLM-5.2, deepseek-v4-pro, kimi-k3, minimax-m3, hy3:free), so all other
-  models are byte-identical to upstream. This rides a small PAL
+  every other model keeps its correct one. Reasoning is on too (see *Reasoning*): 6 models are flagged
+  `supports_extended_thinking` (GLM-5.2, deepseek-v4-pro, kimi-k3, minimax-m3, hy3:free,
+  gpt-5.6-sol-pro), so all other models are byte-identical to upstream. This rides a small PAL
   fork pinned by SHA — see CREDITS.
-- **`/debate` caveat:** its value comes from a *different-vendor* model. Point it at an `anthropic/*`
-  model and it becomes Claude-vs-Claude — the different-distribution benefit is largely lost.
+- **`/debate` caveat:** its value comes from a *different-vendor* model. Point it at a model from the
+  same vendor as your main agent and it becomes self-adversarial — the different-distribution
+  benefit is largely lost.
 
 ---
 
 ## Structure
 ```
-claude-glm-toolkit/
+cross-model-toolkit/
 ├── README.md                                  # this file (humans)
 ├── CREDITS.md                                 # who built what — borrowed vs original
 ├── LICENSE                                    # MIT (covers the original parts; see CREDITS.md)
-├── CLAUDE.md                                  # what Claude auto-loads here (incl. glm_collab.html upkeep rule)
-├── glm_collab.html                            # visual map of the collaboration (offline; see CLAUDE.md)
+├── CLAUDE.md                                  # what Claude auto-loads here (incl. cross_model_collab.html upkeep rule)
+├── cross_model_collab.html                    # visual map of the collaboration (offline; see CLAUDE.md)
+├── docs/kimi-code-variant.md                  # running the same engine under Kimi Code CLI (bootstrapper + user-scope skills)
 ├── .claude-plugin/marketplace.json            # the marketplace catalog ("sergio-tools")
-└── plugins/claude-glm-toolkit/                # the self-contained plugin
+└── plugins/cross-model-toolkit/               # the self-contained plugin
     ├── .claude-plugin/plugin.json             # manifest + userConfig (openrouter_api_key, sensitive)
     ├── .mcp.json                              # PAL server: pinned reasoning fork + superset registry, ${user_config.openrouter_api_key}, DEFAULT_MODEL=auto
-    ├── references/adjudication-protocol.md     # the verify-don't-trust protocol both skills share
-    ├── references/pal-call-conventions.md      # shared PAL mechanics: division of labor, standard call, evidence gate, native tools
+    ├── references/adjudication-protocol.md    # the verify-don't-trust protocol both skills share
+    ├── references/pal-call-conventions.md     # shared PAL mechanics: division of labor, standard call, evidence gate, native tools
     ├── skills/{interceptor,debate}/SKILL.md
-    ├── scripts/build_registry.py               # registry builder: upstream base @ pinned SHA + overlay (--check for CI)
-    ├── config/pal_registry_overlay.json        # the only hand-edited registry file (5 curated entries + flag overrides)
-    └── config/pal_openrouter_models.json      # GENERATED registry (27 base + 5 curated, incl. GLM @ 1M); wired by default — 5 models flagged for reasoning
+    ├── scripts/build_registry.py              # registry builder: upstream base @ pinned SHA + overlay (--check for CI)
+    ├── config/pal_registry_overlay.json       # the only hand-edited registry file (6 curated entries + flag overrides)
+    └── config/pal_openrouter_models.json      # GENERATED registry (27 base + 6 curated, incl. GLM @ 1M); wired by default — 6 models flagged for reasoning
 ```
 
 ## How it's built (record of decisions)
@@ -171,14 +183,15 @@ claude-glm-toolkit/
   model*.
 - **Config:** `config/pal_openrouter_models.json` is a **generated superset** registry — built by
   `scripts/build_registry.py` from PAL's 27 bundled models (fetched at the SHA pinned in `.mcp.json`)
-  plus the curated overlay `config/pal_registry_overlay.json` (5 added entries: GLM-5.2 @ 1M,
-  deepseek-v4-pro, kimi-k3, minimax-m3, hy3:free; plus intentional `supports_extended_thinking:false`
-  overrides on 11 base models upstream ships as true). Wired by default via
-  `OPENROUTER_MODELS_CONFIG_PATH`, so GLM gets 1M while every other model keeps its correct window.
+  plus the curated overlay `config/pal_registry_overlay.json` (6 added entries: GLM-5.2 @ 1M,
+  deepseek-v4-pro, kimi-k3, minimax-m3, hy3:free, gpt-5.6-sol-pro; plus intentional
+  `supports_extended_thinking:false` overrides on 11 base models upstream ships as true). Wired by
+  default via `OPENROUTER_MODELS_CONFIG_PATH`, so GLM gets 1M while every other model keeps its
+  correct window.
 - **Reasoning:** PAL is pinned by SHA to a minimal fork (`sergiobe31/pal-mcp-server`) that maps
   `thinking_mode` onto OpenRouter's `reasoning` field. Only models flagged `supports_extended_thinking`
-  reason — by default 5 (GLM-5.2, deepseek-v4-pro, kimi-k3, minimax-m3, hy3:free); everything else is
-  byte-identical to upstream. See CREDITS / issue #462.
+  reason — by default 6 (GLM-5.2, deepseek-v4-pro, kimi-k3, minimax-m3, hy3:free, gpt-5.6-sol-pro);
+  everything else is byte-identical to upstream. See CREDITS / issue #462.
 
 ## Credits & license
 
@@ -195,9 +208,9 @@ This toolkit is built on other people's work, and it matters to be clear about w
 **Original to this project (Sergio, with Claude):**
 - The **packaging** as a native Claude Code plugin (marketplace + manifest + keychain-backed key + MCP wiring).
 - The GLM-5.2 **1M-context fix** (`config/pal_openrouter_models.json`, a superset registry) — diagnosed and declared so PAL stops falling back to 32K; **wired by default**.
-- The **OpenRouter reasoning fix** — a minimal SHA-pinned PAL fork that maps `thinking_mode` onto OpenRouter's `reasoning` field (GLM reasons at xhigh by default); see CREDITS / issue #462.
+- The **OpenRouter reasoning fix** — a minimal SHA-pinned PAL fork that maps `thinking_mode` onto OpenRouter's `reasoning` field (flagged models reason at xhigh by default); see CREDITS / issue #462.
 - The **claim-by-claim adjudication discipline** (REAL / SMELL / FALSE-POSITIVE / HALLUCINATION) that makes the second model safe to rely on.
-- The two **skills as written** and all the **docs** (README, CLAUDE.md, the `glm_collab.html` brief).
+- The two **skills as written** and all the **docs** (README, CLAUDE.md, the `cross_model_collab.html` brief).
 
 Licensed **MIT** — see [LICENSE](LICENSE).
 
@@ -212,7 +225,7 @@ Licensed **MIT** — see [LICENSE](LICENSE).
   `/reload-plugins` or a restart.
 - Registry maintenance: `config/pal_openrouter_models.json` is **generated** — never edit it by hand.
   Edit `config/pal_registry_overlay.json` (the only hand-maintained file) and run
-  `python3 plugins/claude-glm-toolkit/scripts/build_registry.py`; `--check` exits 1 if the committed
+  `python3 plugins/cross-model-toolkit/scripts/build_registry.py`; `--check` exits 1 if the committed
   file differs from a fresh build (for CI). Re-run it after any PAL SHA bump in `.mcp.json`.
 - Cost: GLM via OpenRouter ≈ $0.95/M input, $3/M output as of 2026 (other models vary — check
   openrouter.ai for current pricing; with no allowlist there's no cost ceiling). Reach for the second

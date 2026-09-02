@@ -25,8 +25,8 @@ as deployed in the `rule_extraction` project.
 | Install | `/plugin marketplace add` + `/plugin install` | Manual: wire the server in the project's `.mcp.json` |
 | API key | `userConfig` (`sensitive`) → system keychain | `OPENROUTER_API_KEY` in the project's `.env` (gitignored), loaded by a bootstrapper |
 | Launch | `.mcp.json` runs `uvx` directly | `.mcp.json` runs `mcp/pal_server.sh`, which sources `.env`, exports the registry path and `exec uvx ...` |
-| Tool names | `mcp__plugin_claude-glm-toolkit_pal__*` | `mcp__pal__*` |
-| Skills | Plugin-namespaced: `/claude-glm-toolkit:debate` | User-scope: `~/.kimi-code/skills/{debate,interceptor}/SKILL.md` |
+| Tool names | `mcp__plugin_cross-model-toolkit_pal__*` | `mcp__pal__*` |
+| Skills | Plugin-namespaced: `/cross-model-toolkit:debate` | User-scope: `~/.kimi-code/skills/{debate,interceptor}/SKILL.md` |
 | Shared references | `plugins/.../references/*.md` | `~/.kimi-code/skills/pal-references/{pal-call-conventions,adjudication-protocol}.md` |
 
 ## The bootstrapper (`mcp/pal_server.sh` in the project)

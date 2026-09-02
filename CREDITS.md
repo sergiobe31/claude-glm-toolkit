@@ -40,7 +40,7 @@ non-OpenRouter providers. Everything else in PAL is upstream's, unmodified.
 
 - Upstream source: https://github.com/BeehiveInnovations/pal-mcp-server (commit `7afc7c1`, v9.8.2)
 - Our fork: https://github.com/sergiobe31/pal-mcp-server (branch `openrouter-reasoning`), pinned by
-  SHA in `plugins/claude-glm-toolkit/.mcp.json`. `git diff 7afc7c1..<fork-sha>` shows exactly the
+  SHA in `plugins/cross-model-toolkit/.mcp.json`. `git diff 7afc7c1..<fork-sha>` shows exactly the
   one-file reasoning patch — nothing else.
 - License: per the upstream repo — the fork preserves it; upstream's terms apply.
 
@@ -88,14 +88,14 @@ These are the parts written for this toolkit. They were authored by **Sergio in 
 1. **Packaging as a native Claude Code plugin.** Assembling the PAL server + the two skills + the
    model config into one versioned, installable unit, with the secret handled natively:
    - `.claude-plugin/marketplace.json` — the marketplace catalog.
-   - `plugins/claude-glm-toolkit/.claude-plugin/plugin.json` — the manifest + the `userConfig`
+   - `plugins/cross-model-toolkit/.claude-plugin/plugin.json` — the manifest + the `userConfig`
      `openrouter_api_key` marked `sensitive` (→ system keychain, never in the repo).
-   - `plugins/claude-glm-toolkit/.mcp.json` — the wiring: `${user_config.openrouter_api_key}`,
+   - `plugins/cross-model-toolkit/.mcp.json` — the wiring: `${user_config.openrouter_api_key}`,
      `DEFAULT_MODEL=auto`, `OPENROUTER_MODELS_CONFIG_PATH` (the superset registry, item 2), and `uvx`
      pinned by SHA to the reasoning fork (item 6).
    - *This is what makes "bring your own key, never share mine" work by design.*
 
-2. **The GLM-5.2 1M-context fix** — `plugins/claude-glm-toolkit/config/pal_openrouter_models.json`.
+2. **The GLM-5.2 1M-context fix** — `plugins/cross-model-toolkit/config/pal_openrouter_models.json`.
    Diagnosed that PAL falls back to a generic 32K window for models it doesn't know
    (`providers/openrouter.py:_lookup_capabilities`), which was silently capping GLM. Declared
    `z-ai/glm-5.2` with its real **1,048,576**-token window so the registry hit bypasses the fallback.
@@ -118,7 +118,7 @@ These are the parts written for this toolkit. They were authored by **Sergio in 
    round-cap and adjudication wiring as they stand here are this project's.
 
 5. **The documentation** — `README.md`, `CLAUDE.md`, this `CREDITS.md`, and the *brief* behind
-   `glm_collab.html` (the visual map: Claude wrote & verified the factual content, GLM-5.2 did the
+   `cross_model_collab.html` (the visual map: Claude wrote & verified the factual content, GLM-5.2 did the
    visual design — a collaboration artifact, labeled as such).
 
 6. **The OpenRouter reasoning fix** — a minimal, SHA-pinned fork of PAL
