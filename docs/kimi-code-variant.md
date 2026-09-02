@@ -61,3 +61,13 @@ When the registry is updated here (overlay edit + `build_registry.py`), copy the
 in **both** this plugin's `.mcp.json` and the project's `mcp/pal_server.sh`. The skills under
 `~/.kimi-code/skills/` are a manual port — re-sync them from `plugins/.../skills/` when they
 change, adjusting only the tool namespace (`mcp__pal__*`) and reference paths.
+
+To detect drift instead of waiting for it to bite, run:
+
+```
+python3 plugins/cross-model-toolkit/scripts/build_registry.py --diff /path/to/project/config/pal_openrouter_models.json
+```
+
+It rebuilds the registry fresh and compares only the `models` array (external copies may carry
+their own `_README`), reporting models missing on either side and field-level differences. Exit 0
+means in sync; exit 1 prints the drift.

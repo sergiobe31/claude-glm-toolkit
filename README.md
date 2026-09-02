@@ -166,7 +166,7 @@ cross-model-toolkit/
     ├── references/adjudication-protocol.md    # the verify-don't-trust protocol both skills share
     ├── references/pal-call-conventions.md     # shared PAL mechanics: division of labor, standard call, evidence gate, native tools
     ├── skills/{interceptor,debate}/SKILL.md
-    ├── scripts/build_registry.py              # registry builder: upstream base @ pinned SHA + overlay (--check for CI)
+    ├── scripts/build_registry.py              # registry builder: upstream base @ pinned SHA + overlay (--check for CI, --diff for external copies)
     ├── config/pal_registry_overlay.json       # the only hand-edited registry file (6 curated entries + flag overrides)
     └── config/pal_openrouter_models.json      # GENERATED registry (27 base + 6 curated, incl. GLM @ 1M); wired by default — 6 models flagged for reasoning
 ```

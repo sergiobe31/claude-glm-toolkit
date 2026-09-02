@@ -10,8 +10,12 @@ Generated artifact = upstream PAL OpenRouter registry + this plugin's curated ov
   applied to base entries by model_name.
 
 Usage:
-  python3 scripts/build_registry.py          # regenerate and write the registry
-  python3 scripts/build_registry.py --check  # exit 1 if the committed file differs (CI)
+  python3 scripts/build_registry.py           # regenerate and write the registry
+  python3 scripts/build_registry.py --check   # exit 1 if the committed file differs (CI)
+  python3 scripts/build_registry.py --diff PATH
+                                              # exit 1 if PATH's models differ from a fresh build
+                                              # (sync check against external copies, e.g. the
+                                              # Kimi Code variant's config/pal_openrouter_models.json)
 """
 import json
 import re
@@ -76,6 +80,25 @@ def build():
     return text
 
 
+def diff_models(fresh_text, external_path):
+    """Compare the models array of a fresh build against an external registry copy.
+
+    Only "models" is compared — external copies may carry their own _README block.
+    Returns a list of human-readable difference lines (empty means in sync).
+    """
+    fresh = {m["model_name"]: m for m in json.loads(fresh_text)["models"]}
+    external = {m["model_name"]: m for m in json.loads(Path(external_path).read_text())["models"]}
+    problems = [f"only in fresh build: {n}" for n in sorted(fresh.keys() - external.keys())]
+    problems += [f"only in {external_path}: {n}" for n in sorted(external.keys() - fresh.keys())]
+    for name in sorted(fresh.keys() & external.keys()):
+        if fresh[name] == external[name]:
+            continue
+        fields = sorted(set(fresh[name]) | set(external[name]))
+        changed = [f for f in fields if fresh[name].get(f) != external[name].get(f)]
+        problems.append(f"{name}: fields differ: {', '.join(changed)}")
+    return problems
+
+
 def main():
     text = build()
     if "--check" in sys.argv[1:]:
@@ -84,6 +107,19 @@ def main():
             print(f"OK: {OUT_JSON.name} is up to date")
             return
         print(f"FAIL: {OUT_JSON.name} differs from a fresh build — run scripts/build_registry.py")
+        sys.exit(1)
+    if "--diff" in sys.argv[1:]:
+        try:
+            external = sys.argv[sys.argv.index("--diff") + 1]
+        except IndexError:
+            sys.exit("error: --diff requires a PATH argument")
+        problems = diff_models(text, external)
+        if not problems:
+            print(f"OK: {external} models are in sync with a fresh build")
+            return
+        print(f"FAIL: {external} is out of sync:")
+        for line in problems:
+            print(f"  {line}")
         sys.exit(1)
     OUT_JSON.write_text(text)
     print(f"wrote {OUT_JSON}")
