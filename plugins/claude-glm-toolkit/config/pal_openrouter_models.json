@@ -2,13 +2,13 @@
   "_README": {
     "purpose": "SUPERSET OpenRouter registry wired by default via OPENROUTER_MODELS_CONFIG_PATH in .mcp.json. PAL loads exactly ONE registry file and REPLACES its bundled one (providers/registries/base.py:42-44), so this file must contain BOTH PAL's bundled models AND our curated entries — otherwise the other models would lose their correct context windows.",
     "generated_by": "GENERATED FILE — do not edit by hand. Built by scripts/build_registry.py; edit config/pal_registry_overlay.json instead and re-run the script.",
-    "provenance": "Base = conf/openrouter_models.json of sergiobe31/pal-mcp-server @ e4ffd3609b56882510ccdca27883eea15d85b68a (the SHA pinned in .mcp.json, branch openrouter-reasoning), fetched at build time. Overlay = config/pal_registry_overlay.json: 5 curated model entries + field overrides on 11 base models.",
+    "provenance": "Base = conf/openrouter_models.json of sergiobe31/pal-mcp-server @ e4ffd3609b56882510ccdca27883eea15d85b68a (the SHA pinned in .mcp.json, branch openrouter-reasoning), fetched at build time. Overlay = config/pal_registry_overlay.json: 6 curated model entries + field overrides on 11 base models.",
     "why_glm": "The plugin's headline feature is GLM-5.2 at its full 1,048,576-token window. Without this file GLM falls back to PAL's generic ~32K (providers/openrouter.py:_lookup_capabilities), capping per-call file budget to ~3.5K tokens. With 1M declared here, per-call file budget becomes ~268K (window x0.8 content x0.4 files x0.8 guard; utils/model_context.py + utils/file_utils.py:843-850).",
-    "reasoning_policy": "5 models have supports_extended_thinking:true — deepseek/deepseek-v4-pro, minimax/minimax-m3, moonshotai/kimi-k3, tencent/hy3:free, z-ai/glm-5.2 — so by default those 5 get OpenRouter reasoning (the fork maps PAL thinking_mode -> reasoning effort; max -> xhigh). The overlay also forces supports_extended_thinking:false on 11 base models that upstream ships with the flag true (upstream default; our fork's reasoning for those models is unverified), keeping the shipped reasoning default limited to the verified entries. Flip flags in the overlay, not here.",
+    "reasoning_policy": "6 models have supports_extended_thinking:true — deepseek/deepseek-v4-pro, minimax/minimax-m3, moonshotai/kimi-k3, openai/gpt-5.6-sol-pro, tencent/hy3:free, z-ai/glm-5.2 — so by default those 6 get OpenRouter reasoning (the fork maps PAL thinking_mode -> reasoning effort; max -> xhigh). The overlay also forces supports_extended_thinking:false on 11 base models that upstream ships with the flag true (upstream default; our fork's reasoning for those models is unverified), keeping the shipped reasoning default limited to the verified entries. Flip flags in the overlay, not here.",
     "resync_instructions": "After bumping the PAL SHA in .mcp.json or editing config/pal_registry_overlay.json, run: python3 scripts/build_registry.py. Use --check in CI to fail if the committed registry differs from a fresh build.",
     "glm_entry_verified": "z-ai/glm-5.2 confirmed on OpenRouter /api/v1/models: single slug, context_length 1,048,576, no separate [1m] variant. Verified 2026-06-30.",
-    "base_model_count": 32,
-    "overlay_model_count": 5,
+    "base_model_count": 33,
+    "overlay_model_count": 6,
     "overlay_override_count": 11
   },
   "models": [
@@ -564,6 +564,28 @@
       "max_image_size_mb": 20.0,
       "description": "Moonshot Kimi K3 - reasoning-mandatory MoE with 1M context via OpenRouter. Multimodal (text+image->text). Reasoning is MANDATORY (cannot be disabled; supported_efforts=['max'] only). context_length=1048576, max_completion_tokens NOT reported by OpenRouter (null; conservatively set to 131072 aligned with peer 1M-context reasoning model minimax-m3 — over-declaring is safe, the model stops earlier), full supported_parameters (reasoning, reasoning_effort, tools, tool_choice, structured_outputs, include_reasoning, response_format) verified against OpenRouter /api/v1/models on 2026-07-17.",
       "intelligence_score": 17
+    },
+    {
+      "model_name": "openai/gpt-5.6-sol-pro",
+      "aliases": [
+        "sol-pro",
+        "gpt5.6-sol-pro",
+        "gpt5.6pro",
+        "solpro"
+      ],
+      "context_window": 1050000,
+      "max_output_tokens": 128000,
+      "supports_extended_thinking": true,
+      "supports_json_mode": true,
+      "supports_function_calling": true,
+      "supports_images": true,
+      "max_image_size_mb": 20.0,
+      "supports_temperature": false,
+      "temperature_constraint": "fixed",
+      "default_reasoning_effort": "medium",
+      "allow_code_generation": true,
+      "description": "GPT-5.6 Sol Pro - OpenAI GPT-5.6 flagship (Sol tier) served with reasoning.mode=pro via OpenRouter. Multimodal (text+image+file->text), 1.05M context, 128K output. Reasoning configurable: supported_efforts=[max, xhigh, high, medium, low, none], default_effort=medium, reasoning NOT mandatory. context_length=1050000, max_completion_tokens=128000, full supported_parameters (include_reasoning, max_completion_tokens, max_tokens, reasoning, reasoning_effort, response_format, seed, structured_outputs, tool_choice, tools) verified against OpenRouter /api/v1/models on 2026-08-09 (canonical slug openai/gpt-5.6-sol-pro-20260709). Pricing $5/M in, $30/M out (2x above 272K prompt tokens).",
+      "intelligence_score": 19
     },
     {
       "model_name": "z-ai/glm-5.2",
