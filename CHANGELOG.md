@@ -26,8 +26,10 @@ All notable changes to this project are documented here. Format loosely follows
   an external registry copy (e.g. the Kimi Code variant's), with field-level drift reporting.
 - Fork-side smoke tests (`pal-mcp-server@0081c16`, branch `openrouter-reasoning`): 6 mocked unit
   tests for the reasoning patch in the default suite plus a live test runnable via the manual
-  `smoke-openrouter-reasoning` workflow. Known finding from that work: `tencent/hy3:free` left the
-  OpenRouter free tier (404 as of 2026-09-02; the paid slug `tencent/hy3` remains).
+  `smoke-openrouter-reasoning` workflow. Finding from that work, now fixed: `tencent/hy3:free` left the
+  OpenRouter free tier (404 as of 2026-09-02) — the overlay entry was updated to the paid slug
+  `tencent/hy3` (262K ctx, 128K output, $0.132/M in, $0.528/M out, re-verified against
+  `/api/v1/models` on 2026-09-02).
 
 ## [1.2.7] — 2026-07-29
 
